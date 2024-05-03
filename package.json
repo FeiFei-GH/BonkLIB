@@ -1,0 +1,25 @@
+{
+    "name": "bonklib",
+    "version": "1.0.2",
+    "description": "BonkLIB",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "generate-lib": "node ./GenerateBonkLIB.js",
+        "generate-docs": "jsdoc --configure jsdoc.json --verbose"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/XyaoFeiFei/BonkLIB.git"
+    },
+    "author": "FeiFei + Clarifi",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/XyaoFeiFei/BonkLIB/issues"
+    },
+    "homepage": "https://github.com/XyaoFeiFei/BonkLIB#readme",
+    "dependencies": {
+        "clean-jsdoc-theme": "^4.2.18",
+        "jsdoc": "^4.0.2"
+    }
+}
