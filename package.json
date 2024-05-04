@@ -5,7 +5,7 @@
     "main": "index.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
-        "generate-lib": "node ./GenerateBonkLIB.js",
+        "build": "node GenerateBonkLIB.js",
         "generate-docs": "jsdoc --configure jsdoc.json --verbose"
     },
     "repository": {

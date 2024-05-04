@@ -7,3 +7,8 @@ When working on new feature, create new feature branch with dev branch as base, 
 
 Feature Branch:
 Work in feature branch, when feel ready, push to dev.
+
+## Usage
+Use `npm install` when first pulling from this branch as well as when node modules are changed.
+
+Build bonkLIB with `npm run build`.
