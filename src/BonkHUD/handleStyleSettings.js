@@ -26,7 +26,6 @@ bonkHUD.importStyleSettings = function(event) {
     let fileReader = new FileReader();
     fileReader.addEventListener("load", (e) => {
         //! No error handling for incorrect file, only protection is that it is in .style file
-        console.log(e.target.result);
         bonkHUD.loadStyleSettings(JSON.parse(e.target.result));
         bonkHUD.updateStyleSettings();
         bonkHUD.saveStyleSettings();
@@ -66,6 +65,13 @@ bonkHUD.resetStyleSettings = function () {
 
 bonkHUD.updateStyleSettings = function () {
     for(let prop in bonkHUD.styleHold) {
+        try {
+            let colorEdit = document.getElementById("bonkhud-" + prop + "-edit");
+            colorEdit.value = bonkHUD.styleHold[prop].color;
+        } catch (er) {
+            console.log("Element bonkhud-" + prop + "-edit does not exist");
+        }
+
         if(prop == "buttonColorHover")
             continue;
         else if(prop == "headerColor") {

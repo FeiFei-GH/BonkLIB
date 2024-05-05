@@ -64,6 +64,7 @@ bonkHUD.initialize = function () {
     settingsContainer.classList.add("bonkhud-scrollbar-kit");
     settingsContainer.classList.add("bonkhud-scrollbar-other");
     settingsContainer.id = "bonkhud-settings-container";
+    settingsContainer.style.overflowY = "scroll";
     settingsContainer.style.flexGrow = "3";
     settingsContainer.style.float = "right";
     settingsContainer.style.height = "100%";
@@ -123,7 +124,8 @@ bonkHUD.initialize = function () {
     let styleImportInput = document.createElement("input");
     styleImportInput.setAttribute("type", "file");
     styleImportInput.setAttribute("accept", ".style");
-    styleImportInput.setAttribute("onChange", "bonkHUD.importStyleSettings(event)");
+    styleImportInput.setAttribute("multiple", "");
+    styleImportInput.setAttribute("onChange", "bonkHUD.importStyleSettings(event);this.value=null");
     styleImportInput.style.display = "none";
 
     let styleSettingsDiv = document.createElement("div");
@@ -162,6 +164,7 @@ bonkHUD.initialize = function () {
 
         let colorEdit = document.createElement("input");
         colorEdit.setAttribute('type', 'color');
+        colorEdit.id = "bonkhud-" + prop + "-edit";
         colorEdit.value = bonkHUD.styleHold[prop].color;
         colorEdit.style.display = "inline-block";
 

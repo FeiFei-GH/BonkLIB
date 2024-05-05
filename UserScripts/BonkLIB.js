@@ -2096,7 +2096,6 @@ bonkHUD.importStyleSettings = function(event) {
     let fileReader = new FileReader();
     fileReader.addEventListener("load", (e) => {
         //! No error handling for incorrect file, only protection is that it is in .style file
-        console.log(e.target.result);
         bonkHUD.loadStyleSettings(JSON.parse(e.target.result));
         bonkHUD.updateStyleSettings();
         bonkHUD.saveStyleSettings();
@@ -2136,6 +2135,13 @@ bonkHUD.resetStyleSettings = function () {
 
 bonkHUD.updateStyleSettings = function () {
     for(let prop in bonkHUD.styleHold) {
+        try {
+            let colorEdit = document.getElementById("bonkhud-" + prop + "-edit");
+            colorEdit.value = bonkHUD.styleHold[prop].color;
+        } catch (er) {
+            console.log("Element bonkhud-" + prop + "-edit does not exist");
+        }
+
         if(prop == "buttonColorHover")
             continue;
         else if(prop == "headerColor") {
@@ -2306,6 +2312,7 @@ bonkHUD.initialize = function () {
     settingsContainer.classList.add("bonkhud-scrollbar-kit");
     settingsContainer.classList.add("bonkhud-scrollbar-other");
     settingsContainer.id = "bonkhud-settings-container";
+    settingsContainer.style.overflowY = "scroll";
     settingsContainer.style.flexGrow = "3";
     settingsContainer.style.float = "right";
     settingsContainer.style.height = "100%";
@@ -2365,7 +2372,8 @@ bonkHUD.initialize = function () {
     let styleImportInput = document.createElement("input");
     styleImportInput.setAttribute("type", "file");
     styleImportInput.setAttribute("accept", ".style");
-    styleImportInput.setAttribute("onChange", "bonkHUD.importStyleSettings(event)");
+    styleImportInput.setAttribute("multiple", "");
+    styleImportInput.setAttribute("onChange", "bonkHUD.importStyleSettings(event);this.value=null");
     styleImportInput.style.display = "none";
 
     let styleSettingsDiv = document.createElement("div");
@@ -2404,6 +2412,7 @@ bonkHUD.initialize = function () {
 
         let colorEdit = document.createElement("input");
         colorEdit.setAttribute('type', 'color');
+        colorEdit.id = "bonkhud-" + prop + "-edit";
         colorEdit.value = bonkHUD.styleHold[prop].color;
         colorEdit.style.display = "inline-block";
 
