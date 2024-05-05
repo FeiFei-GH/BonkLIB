@@ -5,7 +5,11 @@ bonkHUD.saveStyleSettings = function () {
 };
 
 bonkHUD.exportStyleSettings = function() {
-    let out = JSON.stringify(bonkHUD.styleHold);
+    let exportStyleHold = [];
+    for(let prop in bonkHUD.styleHold) {
+        exportStyleHold.push(bonkHUD.styleHold[prop].color);
+    }
+    let out = JSON.stringify(exportStyleHold);
     let save = new File([out], "bonkHUDStyle-" + Date.now() + ".style", {type: 'text/plain',});
 
     let url = URL.createObjectURL(save);
@@ -25,10 +29,27 @@ bonkHUD.importStyleSettings = function(event) {
     }
     let fileReader = new FileReader();
     fileReader.addEventListener("load", (e) => {
-        //! No error handling for incorrect file, only protection is that it is in .style file
-        bonkHUD.loadStyleSettings(JSON.parse(e.target.result));
-        bonkHUD.updateStyleSettings();
-        bonkHUD.saveStyleSettings();
+        let tempStyleHold = {};
+        try {
+            let temp = JSON.parse(e.target.result);
+            let i = 0;
+            for(let prop in bonkHUD.styleHold) {
+                tempStyleHold[prop] = {};
+                tempStyleHold[prop].class = bonkHUD.styleHold[prop].class;
+                tempStyleHold[prop].css = bonkHUD.styleHold[prop].css;
+                if(typeof temp[i] == "string" && temp[i].charAt(0) === "#" && !isNaN(Number("0x" + temp[i].substring(1, 7)))) {
+                    tempStyleHold[prop].color = temp[i];
+                } else {
+                    throw new Error("Incorrect style input");
+                }
+                i++;
+            }
+            bonkHUD.loadStyleSettings(tempStyleHold);
+            bonkHUD.updateStyleSettings();
+            bonkHUD.saveStyleSettings();
+        } catch (er) {
+            alert(er);
+        }
     }, false);
     //let file = event.target.files[0];
     fileReader.readAsText(event.target.files[0]);
