@@ -1,4 +1,4 @@
-#Main{Preload}
+//@Main{Preload}
 
 // *Injecting code into src
 bonkAPI.injector = function (src) {

@@ -1,4 +1,4 @@
-#Main{Preload}
+//@Main{Preload}
 
 window.XMLHttpRequest.prototype.open = function (_, url) {
     if (url.includes("scripts/login_legacy")) {

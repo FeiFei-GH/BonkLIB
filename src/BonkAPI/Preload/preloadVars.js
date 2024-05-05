@@ -1,4 +1,4 @@
-#Variables{Preload}
+//@Variables{Preload}
 window.bonkAPI = {};
 
 /**

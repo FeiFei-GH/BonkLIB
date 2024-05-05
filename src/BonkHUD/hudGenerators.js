@@ -1,4 +1,4 @@
-#Main{Preload}
+//@Main{Preload}
 
 bonkHUD.generateButton = function (name) {
     let newButton = document.createElement("div");

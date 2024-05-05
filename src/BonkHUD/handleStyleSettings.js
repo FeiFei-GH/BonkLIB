@@ -1,4 +1,4 @@
-#Main{Preload}
+//@Main{Preload}
 
 bonkHUD.saveStyleSettings = function () {
     localStorage.setItem('bonkHUD_Style_Settings', JSON.stringify(bonkHUD.styleHold));

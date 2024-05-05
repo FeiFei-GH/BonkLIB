@@ -30,7 +30,7 @@ function getFilePaths (dir) {
 			});
 		} else if(file.endsWith(".js")) {
 			let line = readFirstLine(filePath);
-			if(line.charAt(0) === "#") {
+			if(line.startsWith("//@")) {
 				if(!foundPaths[line]) {
 					foundPaths[line] = [];
 				}
@@ -42,14 +42,14 @@ function getFilePaths (dir) {
 }
 
 let paths = getFilePaths(path.join(__dirname, "src"));
-if(!paths["#Main"])
-	throw new Error("Missing #Main in /src");
+if(!paths["//@Main"])
+	throw new Error("Missing //@Main in /src");
 
-const bonkBase = fs.readFileSync(paths["#Main"][0], {encoding: 'utf-8'});
+const bonkBase = fs.readFileSync(paths["//@Main"][0], {encoding: 'utf-8'});
 let lines = bonkBase.toString().split("\n");
 lines.shift();
 for(let i = 0; i < lines.length; i++) {
-	if(lines[i].trim().charAt(0) === "#") {
+	if(lines[i].trim().startsWith("//@")) {
 		const pathsAdd = paths[lines[i].trim()];
 		let insertCode = "";
 		pathsAdd.forEach((filePath) => {

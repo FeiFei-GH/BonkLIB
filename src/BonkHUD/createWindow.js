@@ -1,4 +1,4 @@
-#Main{Preload}
+//@Main{Preload}
 
 bonkHUD.createWindow = function (name, id, bodyHTML, minHeight) {
     let ind = bonkHUD.getWindowIndexByID(id);

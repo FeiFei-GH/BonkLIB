@@ -1,4 +1,4 @@
-#Main{Preload}
+//@Main{Preload}
 
 // TODO: these could be dangerous, maybe add some sanitization
 // *Send a packet to server

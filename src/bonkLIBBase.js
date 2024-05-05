@@ -1,13 +1,13 @@
-#Main
+//@Main
 window.bonkLIB = {};
 
-#Variables{Preload}
-#Main{Preload}
+//@Variables{Preload}
+//@Main{Preload}
 
 // #region //!------------------Load Complete Detection------------------
 bonkLIB.onLoaded = () => {
-    #Variables{Load}
-    #Main{Load}
+    //@Variables{Load}
+    //@Main{Load}
     console.log("Document loaded complete");
 };
 
@@ -16,9 +16,7 @@ bonkLIB.checkDocumentReady = () => {
         bonkLIB.onLoaded();
     } else {
         document.addEventListener("DOMContentLoaded", function () {
-            //if (document.readyState === "complete") {
-                bonkLIB.onLoaded();
-            //}
+            bonkLIB.onLoaded();
         });
     }
 };

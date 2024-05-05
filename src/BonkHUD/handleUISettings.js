@@ -1,4 +1,4 @@
-#Main{Preload}
+//@Main{Preload}
 
 bonkHUD.saveUISetting = function (id) {
     let ind = bonkHUD.getWindowIndexByID(id);

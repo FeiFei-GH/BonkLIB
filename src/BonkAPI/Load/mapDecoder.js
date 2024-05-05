@@ -1,4 +1,4 @@
-#Main{Load}
+//@Main{Load}
 
 bonkAPI.ISdecode = function (rawdata) {
     rawdata_caseflipped = "";

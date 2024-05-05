@@ -1,4 +1,4 @@
-#Main{Load}
+//@Main{Load}
 
 bonkHUD.loadStyleSettings();
 bonkHUD.updateStyleSettings();

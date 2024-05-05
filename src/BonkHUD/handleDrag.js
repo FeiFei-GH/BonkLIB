@@ -1,4 +1,4 @@
-#Main{Preload}
+//@Main{Preload}
 
 bonkHUD.dragStart = function (e, dragItem) {
     bonkHUD.focusWindow(dragItem);

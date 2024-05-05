@@ -1974,7 +1974,6 @@ bonkHUD.createWindow = function (name, id, bodyHTML, minHeight) {
 
     bonkHUD.updateStyleSettings(); //! probably slow but it works, its not like someone will have 100's of windows
 };
-
 bonkHUD.dragStart = function (e, dragItem) {
     bonkHUD.focusWindow(dragItem);
     // Prevents dragging from starting on the opacity slider
@@ -2007,7 +2006,6 @@ bonkHUD.dragEnd = function (dragMoveFn, dragItem) {
     bonkHUD.windowHold[ind].right = dragItem.style.right;
     bonkHUD.saveUISetting(bonkHUD.windowHold[ind].id);
 };
-
 // Function to start resizing the UI
 bonkHUD.startResizing = function (e, dragItem, dir) {
     e.stopPropagation(); // Prevent triggering dragStart for dragItem
@@ -2072,7 +2070,6 @@ bonkHUD.resizeEnd = function (resizeMoveFn, dragItem, dir) {
     bonkHUD.windowHold[ind].right = dragItem.style.right;
     bonkHUD.saveUISetting(bonkHUD.windowHold[ind].id);
 };
-
 bonkHUD.saveStyleSettings = function () {
     localStorage.setItem('bonkHUD_Style_Settings', JSON.stringify(bonkHUD.styleHold));
 };
@@ -2156,7 +2153,6 @@ bonkHUD.updateStyleSettings = function () {
         }
     }
 };
-
 bonkHUD.saveUISetting = function (id) {
     let ind = bonkHUD.getWindowIndexByID(id);
     let save_id = 'bonkHUD_Setting_' + id;
@@ -2199,7 +2195,6 @@ bonkHUD.resetUISetting = function (id) {
         console.log(`bonkHUD.resetUISetting: Window element not found for id: ${id}. Please ensure the window has been created.`);
     }
 };
-
 bonkHUD.getWindowIndexByID = function (id) {
     for (let i = 0; i < bonkHUD.windowHold.length; i++) {
         if (bonkHUD.windowHold[i].id == id) {
@@ -2229,7 +2224,6 @@ bonkHUD.pxTorem = function (px) {
 bonkHUD.remTopx = function (rem) {
     return rem * parseFloat(getComputedStyle(document.documentElement).fontSize);
 };
-
 bonkHUD.generateButton = function (name) {
     let newButton = document.createElement("div");
     newButton.classList.add("bonkhud-button-color");
@@ -2248,7 +2242,6 @@ bonkHUD.generateButton = function (name) {
     });
     return newButton;
 }
-
 bonkHUD.initialize = function () {
     //bonkHUD.stylesheet = document.createElement("style");
     let settingsMenu = document.createElement("div");
@@ -2494,7 +2487,6 @@ bonkHUD.initialize = function () {
         styleImportInput.click();
     });
 };
-
 bonkHUD.createWindowControl = function (name, ind) {
     // Create container for the opacity controls with initial styles
     let sliderRow = document.createElement("div");
@@ -2589,7 +2581,6 @@ bonkHUD.focusWindow = function (focusItem) {
         }
     }
 };
-
 
 // #region //!------------------Load Complete Detection------------------
 bonkLIB.onLoaded = () => {
@@ -3534,7 +3525,6 @@ bonkHUD.loadStyleSettings();
 bonkHUD.updateStyleSettings();
 
 bonkHUD.initialize();
-
     console.log("Document loaded complete");
 };
 
@@ -3543,9 +3533,7 @@ bonkLIB.checkDocumentReady = () => {
         bonkLIB.onLoaded();
     } else {
         document.addEventListener("DOMContentLoaded", function () {
-            //if (document.readyState === "complete") {
-                bonkLIB.onLoaded();
-            //}
+            bonkLIB.onLoaded();
         });
     }
 };

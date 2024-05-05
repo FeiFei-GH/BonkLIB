@@ -1,4 +1,4 @@
-#Main{Preload}
+//@Main{Preload}
 
 bonkHUD.initialize = function () {
     //bonkHUD.stylesheet = document.createElement("style");

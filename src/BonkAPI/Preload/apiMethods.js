@@ -1,4 +1,4 @@
-#Main{Preload}
+//@Main{Preload}
 
 /**
  * Sends message in game's public chat.

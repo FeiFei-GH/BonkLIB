@@ -1,4 +1,4 @@
-#Main{Preload}
+//@Main{Preload}
 
 // Function to start resizing the UI
 bonkHUD.startResizing = function (e, dragItem, dir) {

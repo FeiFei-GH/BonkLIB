@@ -1,4 +1,4 @@
-#Main{Load}
+//@Main{Load}
 
 window.PIXI.Graphics.prototype.drawShape = function(...args) {
     //! testing whether cap can be easily found in drawShape

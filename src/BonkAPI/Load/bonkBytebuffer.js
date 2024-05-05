@@ -1,4 +1,4 @@
-#Main{Load}
+//@Main{Load}
 
 class bonkAPI_bytebuffer {
     constructor() {

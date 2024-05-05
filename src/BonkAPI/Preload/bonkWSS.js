@@ -1,4 +1,4 @@
-#Main{Preload}
+//@Main{Preload}
 
 window.WebSocket.prototype.send = function (args) {
     if (this.url.includes("socket.io/?EIO=3&transport=websocket&sid=")) {

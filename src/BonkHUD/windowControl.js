@@ -1,4 +1,4 @@
-#Main{Preload}
+//@Main{Preload}
 
 bonkHUD.createWindowControl = function (name, ind) {
     // Create container for the opacity controls with initial styles

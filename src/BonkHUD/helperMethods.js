@@ -1,4 +1,4 @@
-#Main{Preload}
+//@Main{Preload}
 
 bonkHUD.getWindowIndexByID = function (id) {
     for (let i = 0; i < bonkHUD.windowHold.length; i++) {
