@@ -124,12 +124,12 @@ class bonkAPI_bytebuffer {
         for (P4$[7] = 0; P4$[7] < P4$[8]; P4$[7]++) {
         P4$[4] += String.fromCharCode(P4$[9][P4$[7]]);
         }
-        return Gwindow.btoa(P4$[4]);
+        return window.btoa(P4$[4]);
     }
     fromBase64(W69, A8Q) {
         var o0n = [arguments];
-        o0n[8] = Gwindow.pako;
-        o0n[6] = Gwindow.atob(o0n[0][0]);
+        o0n[8] = window.pako;
+        o0n[6] = window.atob(o0n[0][0]);
         o0n[9] = o0n[6].length;
         o0n[4] = new Uint8Array(o0n[9]);
         for (o0n[1] = 0; o0n[1] < o0n[9]; o0n[1]++) {
