@@ -1853,10 +1853,9 @@ bonkHUD.createWindow = function (name, id, bodyHTML, minHeight) {
     dragItem.classList.add("bonkhud-window-container");
     dragItem.classList.add("bonkhud-background-color");
     dragItem.classList.add("windowShadow");
-    dragItem.classList.add("bonkhud-scrollbar-kit");
-    dragItem.classList.add("bonkhud-scrollbar-other");
     dragItem.id = id + "-drag";
     dragItem.style.overflowX = "hidden";
+    dragItem.style.overflowY = "hidden";
     dragItem.style.bottom = bonkHUD.windowHold[ind].bottom; //top ? top : "0";
     dragItem.style.right = bonkHUD.windowHold[ind].right; //left ? left : "0";
     dragItem.style.width = bonkHUD.windowHold[ind].width; //width ? width : "172";
@@ -1932,6 +1931,9 @@ bonkHUD.createWindow = function (name, id, bodyHTML, minHeight) {
     // Create the key table
     bodyHTML.id = id;
     bodyHTML.classList.add("bonkhud-text-color");
+    bodyHTML.classList.add("bonkhud-scrollbar-kit");
+    bodyHTML.classList.add("bonkhud-scrollbar-other");
+    bodyHTML.style.overflowY = "scroll";
     bodyHTML.style.padding = "5px";
     bodyHTML.style.width = "calc(100% - 10px)";
     bodyHTML.style.height = "calc(100% - 42px)"; // Adjusted height for header
