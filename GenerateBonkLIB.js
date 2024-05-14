@@ -1,63 +1,65 @@
-const fs = require('fs');
-const path = require('path');
-const packageJson = require('./package.json');
+const fs = require("fs");
+const path = require("path");
+const packageJson = require("./package.json");
 
-function readFirstLine (filePath) {
-	try {
-		var data = fs.readFileSync(filePath).toString().split("\n")[0];
-		return data;
-	} catch(er) {
-		throw new Error(er);
-	}
+function readFirstLine(filePath) {
+    try {
+        var data = fs.readFileSync(filePath).toString().split("\n")[0];
+        return data.trim(); // Trim the line to remove any extra whitespace or carriage return characters
+    } catch (er) {
+        throw new Error(er);
+    }
 }
 
-function getFilePaths (dir) {
-	let foundPaths = {};
-	const files = fs.readdirSync(dir);
-	
-	for(const file of files) {
-		const filePath = path.join(dir, file);
-		const fileData = fs.statSync(filePath);
-		
-		if(fileData.isDirectory()) {
-			let otherPaths = getFilePaths(filePath);
-			//!problem here
-			Object.keys(otherPaths).forEach((key) => {
-				if(!foundPaths[key]) {
-					foundPaths[key] = [];
-				}
-				foundPaths[key] = foundPaths[key].concat(otherPaths[key]);
-			});
-		} else if(file.endsWith(".js")) {
-			let line = readFirstLine(filePath);
-			if(line.startsWith("//@")) {
-				if(!foundPaths[line]) {
-					foundPaths[line] = [];
-				}
-				foundPaths[line].push(filePath);
-			}
-		}
-	}
-	return foundPaths;
+function getFilePaths(dir) {
+    let foundPaths = {};
+    const files = fs.readdirSync(dir);
+
+    for (const file of files) {
+        const filePath = path.join(dir, file);
+        const fileData = fs.statSync(filePath);
+
+        if (fileData.isDirectory()) {
+            let otherPaths = getFilePaths(filePath);
+            //!problem here
+            Object.keys(otherPaths).forEach((key) => {
+                if (!foundPaths[key]) {
+                    foundPaths[key] = [];
+                }
+                foundPaths[key] = foundPaths[key].concat(otherPaths[key]);
+            });
+        } else if (file.endsWith(".js")) {
+            let line = readFirstLine(filePath);
+            if (line.startsWith("//@")) {
+                if (!foundPaths[line]) {
+                    foundPaths[line] = [];
+                }
+                foundPaths[line].push(filePath);
+            }
+        }
+    }
+    return foundPaths;
 }
 
 let paths = getFilePaths(path.join(__dirname, "src"));
-if(!paths["//@Main"])
-	throw new Error("Missing //@Main in /src");
+if (!paths["//@Main"]) {
+    console.error("The following //@ annotations were found:", Object.keys(paths)); // Debug logging
+    throw new Error("Missing //@Main in /src");
+}
 
-const bonkBase = fs.readFileSync(paths["//@Main"][0], {encoding: 'utf-8'});
+const bonkBase = fs.readFileSync(paths["//@Main"][0], { encoding: "utf-8" });
 let lines = bonkBase.toString().split("\n");
 lines.shift();
-for(let i = 0; i < lines.length; i++) {
-	if(lines[i].trim().startsWith("//@")) {
-		const pathsAdd = paths[lines[i].trim()];
-		let insertCode = "";
-		pathsAdd.forEach((filePath) => {
-			let code = fs.readFileSync(filePath, {encoding: 'utf-8'});
-			insertCode += code.substring(lines[i].trim().length + 1);
-		});
-		lines.splice(i, 1, insertCode);
-	}
+for (let i = 0; i < lines.length; i++) {
+    if (lines[i].trim().startsWith("//@")) {
+        const pathsAdd = paths[lines[i].trim()];
+        let insertCode = "";
+        pathsAdd.forEach((filePath) => {
+            let code = fs.readFileSync(filePath, { encoding: "utf-8" });
+            insertCode += code.substring(lines[i].trim().length + 1);
+        });
+        lines.splice(i, 1, insertCode);
+    }
 }
 const bonkLIB = lines.join("\n");
 const content = `// ==UserScript==
@@ -79,4 +81,5 @@ https://greasyfork.org/en/scripts/433861-code-injector-bonk-io
 ${bonkLIB}
 `;
 
-fs.writeFileSync(`./UserScripts/BonkLIB.js`, content);
+fs.writeFileSync(`./UserScripts/BonkLIB.user.js`, content);
+console.log('\x1b[32m%s\x1b[0m', 'BonkLIB.user.js Generated!');
