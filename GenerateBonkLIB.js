@@ -66,7 +66,7 @@ const content = `// ==UserScript==
 // @name         BonkLIB
 // @version      ${packageJson.version}
 // @author       FeiFei + Clarifi + BoZhi
-// @namespace    https://github.com/XyaoFeiFei/BonkLIB
+// @namespace    https://github.com/FeiFei-GH/BonkLIB
 // @description  BonkAPI + BonkHUD
 // @license      MIT
 // @match        https://*.bonk.io/gameframe-release.html
