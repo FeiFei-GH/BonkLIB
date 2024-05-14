@@ -10,14 +10,14 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/XyaoFeiFei/BonkLIB.git"
+        "url": "git+https://github.com/FeiFei-GH/BonkLIB.git"
     },
     "author": "FeiFei + Clarifi",
     "license": "MIT",
     "bugs": {
-        "url": "https://github.com/XyaoFeiFei/BonkLIB/issues"
+        "url": "https://github.com/FeiFei-GH/BonkLIB/issues"
     },
-    "homepage": "https://github.com/XyaoFeiFei/BonkLIB#readme",
+    "homepage": "https://github.com/FeiFei-GH/BonkLIB#readme",
     "dependencies": {
         "clean-jsdoc-theme": "^4.2.18",
         "jsdoc": "^4.0.2"
