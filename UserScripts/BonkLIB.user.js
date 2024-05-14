@@ -16,6 +16,7 @@ https://greasyfork.org/en/scripts/433861-code-injector-bonk-io
 // ! Compitable with Bonk Version 49
 window.bonkLIB = {};
 
+
 window.bonkAPI = {};
 
 /**
@@ -59,6 +60,7 @@ bonkAPI.pixiStage = 0;
 bonkAPI.parentDraw = 0;
 bonkAPI.originalXMLOpen = window.XMLHttpRequest.prototype.open;
 bonkAPI.originalXMLSend = window.XMLHttpRequest.prototype.send;
+
 window.bonkHUD = {};
 
 bonkHUD.windowHold = [];
@@ -129,6 +131,7 @@ bonkHUD.bonkHUDCSS.innerHTML = `
 `;
 
 document.getElementsByTagName("head")[0].appendChild(bonkHUD.bonkHUDCSS);
+
 
 
 /**
@@ -385,6 +388,7 @@ bonkAPI.isInGame = function () {
     let renderer = document.getElementById("gamerenderer");
     return renderer.style.visibility == "inherit";
 }
+
 window.WebSocket.prototype.send = function (args) {
     if (this.url.includes("socket.io/?EIO=3&transport=websocket&sid=")) {
         if (!this.injectedAPI) {
@@ -625,6 +629,7 @@ window.WebSocket.prototype.send = function (args) {
 
     return bonkAPI.originalSend.call(this, args);
 };
+
 /**
  * @class EventHandler
  * @classdesc Stores functions and events and can fire events with data.
@@ -693,6 +698,7 @@ bonkAPI.EventHandler;
 
 //initialize
 bonkAPI.events = new bonkAPI.EventHandler();
+
 
 /**
  * Triggered when recieving ping updates.
@@ -1359,6 +1365,7 @@ bonkAPI.receive_RoomPassword = function (args) {
 
     return args;
 };
+
 /**
  * Called when sending inputs out.
  * @function send_Inputs
@@ -1717,6 +1724,7 @@ bonkAPI.send_NoHostSwap = function (args) {
 
     return args;
 };
+
 window.XMLHttpRequest.prototype.open = function (_, url) {
     if (url.includes("scripts/login_legacy")) {
         bonkAPI.isLoggingIn = true;
@@ -1736,6 +1744,7 @@ window.XMLHttpRequest.prototype.send = function (data) {
     }
     bonkAPI.originalXMLSend.call(this, ...arguments);
 };
+
 // *Injecting code into src
 bonkAPI.injector = function (src) {
     let newSrc = src;
@@ -1817,6 +1826,7 @@ window.bonkCodeInjectors.push((bonkCode) => {
         throw error;
     }
 });
+
 // TODO: these could be dangerous, maybe add some sanitization
 // *Send a packet to server
 /**
@@ -1841,6 +1851,7 @@ bonkAPI.receivePacket = function (packet) {
         bonkAPI.bonkWSS.onmessage({ data: packet });
     }
 };
+
 bonkHUD.createWindow = function (name, id, bodyHTML, minHeight) {
     let ind = bonkHUD.getWindowIndexByID(id);
     if (ind == -1) {
@@ -1976,6 +1987,7 @@ bonkHUD.createWindow = function (name, id, bodyHTML, minHeight) {
 
     bonkHUD.updateStyleSettings(); //! probably slow but it works, its not like someone will have 100's of windows
 };
+
 bonkHUD.dragStart = function (e, dragItem) {
     bonkHUD.focusWindow(dragItem);
     // Prevents dragging from starting on the opacity slider
@@ -2008,6 +2020,7 @@ bonkHUD.dragEnd = function (dragMoveFn, dragItem) {
     bonkHUD.windowHold[ind].right = dragItem.style.right;
     bonkHUD.saveUISetting(bonkHUD.windowHold[ind].id);
 };
+
 // Function to start resizing the UI
 bonkHUD.startResizing = function (e, dragItem, dir) {
     e.stopPropagation(); // Prevent triggering dragStart for dragItem
@@ -2072,6 +2085,7 @@ bonkHUD.resizeEnd = function (resizeMoveFn, dragItem, dir) {
     bonkHUD.windowHold[ind].right = dragItem.style.right;
     bonkHUD.saveUISetting(bonkHUD.windowHold[ind].id);
 };
+
 bonkHUD.saveStyleSettings = function () {
     localStorage.setItem('bonkHUD_Style_Settings', JSON.stringify(bonkHUD.styleHold));
 };
@@ -2182,6 +2196,7 @@ bonkHUD.updateStyleSettings = function () {
         }
     }
 };
+
 bonkHUD.saveUISetting = function (id) {
     let ind = bonkHUD.getWindowIndexByID(id);
     let save_id = 'bonkHUD_Setting_' + id;
@@ -2224,6 +2239,7 @@ bonkHUD.resetUISetting = function (id) {
         console.log(`bonkHUD.resetUISetting: Window element not found for id: ${id}. Please ensure the window has been created.`);
     }
 };
+
 bonkHUD.getWindowIndexByID = function (id) {
     for (let i = 0; i < bonkHUD.windowHold.length; i++) {
         if (bonkHUD.windowHold[i].id == id) {
@@ -2253,6 +2269,7 @@ bonkHUD.pxTorem = function (px) {
 bonkHUD.remTopx = function (rem) {
     return rem * parseFloat(getComputedStyle(document.documentElement).fontSize);
 };
+
 bonkHUD.generateButton = function (name) {
     let newButton = document.createElement("div");
     newButton.classList.add("bonkhud-button-color");
@@ -2271,6 +2288,7 @@ bonkHUD.generateButton = function (name) {
     });
     return newButton;
 }
+
 bonkHUD.initialize = function () {
     //bonkHUD.stylesheet = document.createElement("style");
     let settingsMenu = document.createElement("div");
@@ -2519,6 +2537,7 @@ bonkHUD.initialize = function () {
         styleImportInput.click();
     });
 };
+
 bonkHUD.createWindowControl = function (name, ind) {
     // Create container for the opacity controls with initial styles
     let sliderRow = document.createElement("div");
@@ -2616,6 +2635,7 @@ bonkHUD.focusWindow = function (focusItem) {
 
 // #region //!------------------Load Complete Detection------------------
 bonkLIB.onLoaded = () => {
+
 bonkAPI.originalDrawShape = window.PIXI.Graphics.prototype.drawShape;
 bonkAPI.pixiCtx = new window.PIXI.Container();
 
@@ -2697,6 +2717,7 @@ bonkAPI.ISpsonpair = new window.dcodeIO.PSON.StaticPair([
     65535,
     16777215,
 ]);
+
 
 
 class bonkAPI_bytebuffer {
@@ -2846,6 +2867,7 @@ class bonkAPI_bytebuffer {
         this.index = 0;
     }
 }
+
 bonkAPI.ISdecode = function (rawdata) {
     rawdata_caseflipped = "";
     for (i = 0; i < rawdata.length; i++) {
@@ -3470,6 +3492,7 @@ bonkAPI.decodeMap = function (map) {
     }
     return map;
 };
+
 window.PIXI.Graphics.prototype.drawShape = function(...args) {
     //! testing whether cap can be easily found in drawShape
     //! in drawCircle, capzone has attribute 'cap: "bet"' inside fill_outline
@@ -3553,6 +3576,7 @@ if(bonkAPI.events.hasEvent["graphicsReady"]) {
     }
     bonkAPI.events.fireEvent("graphicsReady", sendObj);
 }
+
 bonkHUD.loadStyleSettings();
 bonkHUD.updateStyleSettings();
 
