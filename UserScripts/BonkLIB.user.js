@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         BonkLIB
-// @version      1.0.2
+// @version      1.0.3
 // @author       FeiFei + Clarifi + BoZhi
 // @namespace    https://github.com/XyaoFeiFei/BonkLIB
 // @description  BonkAPI + BonkHUD
