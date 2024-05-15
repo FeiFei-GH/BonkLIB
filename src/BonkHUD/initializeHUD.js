@@ -179,6 +179,7 @@ bonkHUD.initialize = function () {
         });
     }
 
+    let topBarButtons = document.querySelectorAll("#pretty_top_bar > .niceborderleft");
     //Create element in top bar
     let topBarOption = document.createElement("div");
     topBarOption.style.width = "58px";
@@ -186,7 +187,7 @@ bonkHUD.initialize = function () {
     topBarOption.style.backgroundRepeat = "no-repeat";
     topBarOption.style.backgroundPosition = "center";
     topBarOption.style.position = "absolute";
-    topBarOption.style.right = "290px";
+    topBarOption.style.right = topBarButtons.length * 58 + 1 + "px";
     topBarOption.style.top = "0";
     topBarOption.style.visibility = "visible";
     topBarOption.style.borderBottom = "2px solid transparent";
