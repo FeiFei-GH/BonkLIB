@@ -1407,9 +1407,13 @@ bonkAPI.send_GameStart = function (args) {
         //! then assign it back to the args
         var sendObj = {
             mapData: bonkAPI.ISdecode(args[1]["is"]),
-            startData: args[1]["map"],
+            startData: args[1]["gs"],
         };
         bonkAPI.events.fireEvent("gameStart", sendObj);
+
+        //!possibly temporary
+        //allows start packet to be edited
+        args[1]["is"] = bonkAPI.ISencode(sendObj.mapData);
     }
 
     return args;
@@ -2450,6 +2454,7 @@ bonkHUD.initialize = function () {
         });
     }
 
+    let topBarButtons = document.querySelectorAll("#pretty_top_bar > .niceborderleft");
     //Create element in top bar
     let topBarOption = document.createElement("div");
     topBarOption.style.width = "58px";
@@ -2457,7 +2462,7 @@ bonkHUD.initialize = function () {
     topBarOption.style.backgroundRepeat = "no-repeat";
     topBarOption.style.backgroundPosition = "center";
     topBarOption.style.position = "absolute";
-    topBarOption.style.right = "290px";
+    topBarOption.style.right = topBarButtons.length * 58 + 1 + "px";
     topBarOption.style.top = "0";
     topBarOption.style.visibility = "visible";
     topBarOption.style.borderBottom = "2px solid transparent";
@@ -3557,6 +3562,12 @@ bonkHUD.loadStyleSettings();
 bonkHUD.updateStyleSettings();
 
 bonkHUD.initialize();
+
+//!implement later on a toggle to show or hide ads
+let ad1 = window.top.document.getElementById('adboxverticalCurse');
+let ad2 = window.top.document.getElementById('adboxverticalleftCurse');
+ad1.style.display = "none";
+ad2.style.display = "none";
     console.log("Document loaded complete");
 };
 
