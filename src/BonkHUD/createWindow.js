@@ -1,6 +1,6 @@
 //@Main{Preload}
 
-bonkHUD.createWindow = function (name, id, bodyHTML, minHeight) {
+bonkHUD.createWindow = function (name, id, bodyHTML, settingElement = 0) {
     let ind = bonkHUD.getWindowIndexByID(id);
     if (ind == -1) {
         bonkHUD.windowHold.push(bonkHUD.getUISetting(id));
@@ -101,7 +101,7 @@ bonkHUD.createWindow = function (name, id, bodyHTML, minHeight) {
     dragItem.appendChild(bodyHTML);
 
     // Append the opacity control to the dragItem
-    let opacityControl = bonkHUD.createWindowControl(name, ind);
+    let opacityControl = bonkHUD.createWindowControl(name, ind, settingElement);
     document.getElementById("bonkhud-window-settings-container").appendChild(opacityControl);
 
     // Append the dragItem to the body of the page

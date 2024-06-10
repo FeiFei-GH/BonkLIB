@@ -1,6 +1,6 @@
 //@Main{Preload}
 
-bonkHUD.createWindowControl = function (name, ind) {
+bonkHUD.createWindowControl = function (name, ind, settingsElement = 0) {
     // Create container for the opacity controls with initial styles
     let sliderRow = document.createElement("div");
     sliderRow.classList.add("bonkhud-settings-row");
@@ -81,6 +81,11 @@ bonkHUD.createWindowControl = function (name, ind) {
     sliderRow.appendChild(holdLeft);
     sliderRow.appendChild(holdRight);
     sliderRow.appendChild(windowResetButton);
+
+    //! may instead make it so when sliderrow is focused, the
+    //! seetings appear on the big settings menu
+    if(settingsElement !== 0 && settingsElement instanceof Node)
+        sliderRow.appendChild(settingsElement);
 
     return sliderRow; // Return the fully constructed slider row element
 };
