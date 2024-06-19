@@ -1,6 +1,17 @@
 //@Main{Preload}
 
-bonkHUD.createWindow = function (name, id, bodyHTML, settingElement = 0) {
+bonkHUD.createWindow = function (name, id, recVersion, bodyHTML, settingElement = 0) {
+    if(recVersion != bonkLIB.version) {
+        if(typeof recVersion === 'string') {
+            if(recVersion.substring(0,recVersion.indexOf(".")) == bonkLIB.version.substring(0, recVersion.indexOf(".")))
+                alert(name + " may not be compatible with current version of BonkLIB ("+recVersion+" =/= "+bonkLIB.version+")");
+            console.log(name + " may not be compatible with current version of BonkLIB ("+recVersion+" =/= "+bonkLIB.version+")");
+        }
+        else {
+            alert("Version is incompatible, please check with mod maker to fix");
+        }
+    }
+
     let ind = bonkHUD.getWindowIndexByID(id);
     if (ind == -1) {
         bonkHUD.windowHold.push(bonkHUD.getUISetting(id));
@@ -101,7 +112,7 @@ bonkHUD.createWindow = function (name, id, bodyHTML, settingElement = 0) {
     dragItem.appendChild(bodyHTML);
 
     // Append the opacity control to the dragItem
-    let opacityControl = bonkHUD.createWindowControl(name, ind, settingElement);
+    let opacityControl = bonkHUD.createWindowControl(name, recVersion, ind, settingElement);
     document.getElementById("bonkhud-window-settings-container").appendChild(opacityControl);
 
     // Append the dragItem to the body of the page

@@ -1,6 +1,6 @@
 //@Main{Preload}
 
-bonkHUD.createWindowControl = function (name, ind, settingsElement = 0) {
+bonkHUD.createWindowControl = function (name, recVersion, ind, settingsElement = 0) {
     // Create container for the opacity controls with initial styles
     let sliderRow = document.createElement("div");
     sliderRow.classList.add("bonkhud-settings-row");
@@ -8,7 +8,7 @@ bonkHUD.createWindowControl = function (name, ind, settingsElement = 0) {
 
     // Add a title to the slider row for visual clarity
     let sliderTitle = document.createElement("div");
-    sliderTitle.textContent = name;
+    sliderTitle.textContent = name + " ("+recVersion+")";
     sliderTitle.style.marginBottom = "5px";
     sliderTitle.style.fontSize = "1.2rem"; // Text size for readability
     sliderTitle.style.fontWeight = "bold"; // Make the title text bold
@@ -64,7 +64,7 @@ bonkHUD.createWindowControl = function (name, ind, settingsElement = 0) {
     visiblityCheck.oninput = function () {
         let control = document.getElementById(bonkHUD.windowHold[ind].id + "-drag"); // Update the UI opacity in real-time;
         control.style.display = this.checked ? "block" : "none";
-        bonkHUD.windowHold[ind].block = control.style.block;
+        bonkHUD.windowHold[ind].display = control.style.display;
         bonkHUD.saveUISetting(bonkHUD.windowHold[ind].id);
     };
     holdRight.appendChild(visiblityCheck); // Place the slider into the slider container

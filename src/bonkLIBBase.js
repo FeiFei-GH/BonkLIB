@@ -1,6 +1,4 @@
 //@Main
-window.bonkLIB = {};
-
 //@Variables{Preload}
 //@Main{Preload}
 

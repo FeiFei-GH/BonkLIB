@@ -1,5 +1,8 @@
 //@Main{Preload}
 
+// !Right now only useful for mods that have a setting that **only**
+// !needs to be read from 
+
 bonkHUD.saveModSetting = function (id, obj) {
     let save_id = 'bonkHUD_Mod_Setting_' + id;
     localStorage.setItem(save_id, JSON.stringify(obj));
@@ -9,6 +12,7 @@ bonkHUD.getModSetting = function (id) {
     let save_id = 'bonkHUD_Mod_Setting_' + id;
     let setting = JSON.parse(localStorage.getItem(save_id));
     if (!setting) {
+        // !let mod maker handle it
         return null;
     }
     return setting;

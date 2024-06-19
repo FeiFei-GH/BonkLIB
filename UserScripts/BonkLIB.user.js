@@ -15,6 +15,7 @@ https://greasyfork.org/en/scripts/433861-code-injector-bonk-io
 */
 // ! Compitable with Bonk Version 49
 window.bonkLIB = {};
+bonkLIB.version = 1.0.3;
 
 window.bonkAPI = {};
 
@@ -1845,7 +1846,18 @@ bonkAPI.receivePacket = function (packet) {
         bonkAPI.bonkWSS.onmessage({ data: packet });
     }
 };
-bonkHUD.createWindow = function (name, id, bodyHTML, settingElement = 0) {
+bonkHUD.createWindow = function (name, id, recVersion, bodyHTML, settingElement = 0) {
+    if(recVersion != bonkLIB.version) {
+        if(typeof recVersion === 'string') {
+            if(recVersion.substring(0,recVersion.indexOf(".")) == bonkLIB.version.substring(0, recVersion.indexOf(".")))
+                alert(name + " may not be compatible with current version of BonkLIB ("+recVersion+" =/= "+bonkLIB.version+")");
+            console.log(name + " may not be compatible with current version of BonkLIB ("+recVersion+" =/= "+bonkLIB.version+")");
+        }
+        else {
+            alert("Version is incompatible, please check with mod maker to fix");
+        }
+    }
+
     let ind = bonkHUD.getWindowIndexByID(id);
     if (ind == -1) {
         bonkHUD.windowHold.push(bonkHUD.getUISetting(id));
@@ -1946,7 +1958,7 @@ bonkHUD.createWindow = function (name, id, bodyHTML, settingElement = 0) {
     dragItem.appendChild(bodyHTML);
 
     // Append the opacity control to the dragItem
-    let opacityControl = bonkHUD.createWindowControl(name, ind, settingElement);
+    let opacityControl = bonkHUD.createWindowControl(name, recVersion, ind, settingElement);
     document.getElementById("bonkhud-window-settings-container").appendChild(opacityControl);
 
     // Append the dragItem to the body of the page
@@ -2012,6 +2024,9 @@ bonkHUD.dragEnd = function (dragMoveFn, dragItem) {
     bonkHUD.windowHold[ind].right = dragItem.style.right;
     bonkHUD.saveUISetting(bonkHUD.windowHold[ind].id);
 };
+// !Right now only useful for mods that have a setting that **only**
+// !needs to be read from 
+
 bonkHUD.saveModSetting = function (id, obj) {
     let save_id = 'bonkHUD_Mod_Setting_' + id;
     localStorage.setItem(save_id, JSON.stringify(obj));
@@ -2021,6 +2036,7 @@ bonkHUD.getModSetting = function (id) {
     let save_id = 'bonkHUD_Mod_Setting_' + id;
     let setting = JSON.parse(localStorage.getItem(save_id));
     if (!setting) {
+        // !let mod maker handle it
         return null;
     }
     return setting;
@@ -2556,7 +2572,7 @@ bonkHUD.initialize = function () {
         styleImportInput.click();
     });
 };
-bonkHUD.createWindowControl = function (name, ind, settingsElement = 0) {
+bonkHUD.createWindowControl = function (name, recVersion, ind, settingsElement = 0) {
     // Create container for the opacity controls with initial styles
     let sliderRow = document.createElement("div");
     sliderRow.classList.add("bonkhud-settings-row");
@@ -2564,7 +2580,7 @@ bonkHUD.createWindowControl = function (name, ind, settingsElement = 0) {
 
     // Add a title to the slider row for visual clarity
     let sliderTitle = document.createElement("div");
-    sliderTitle.textContent = name;
+    sliderTitle.textContent = name + " ("+recVersion+")";
     sliderTitle.style.marginBottom = "5px";
     sliderTitle.style.fontSize = "1.2rem"; // Text size for readability
     sliderTitle.style.fontWeight = "bold"; // Make the title text bold
@@ -2620,7 +2636,7 @@ bonkHUD.createWindowControl = function (name, ind, settingsElement = 0) {
     visiblityCheck.oninput = function () {
         let control = document.getElementById(bonkHUD.windowHold[ind].id + "-drag"); // Update the UI opacity in real-time;
         control.style.display = this.checked ? "block" : "none";
-        bonkHUD.windowHold[ind].block = control.style.block;
+        bonkHUD.windowHold[ind].display = control.style.display;
         bonkHUD.saveUISetting(bonkHUD.windowHold[ind].id);
     };
     holdRight.appendChild(visiblityCheck); // Place the slider into the slider container
