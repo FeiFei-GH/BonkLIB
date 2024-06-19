@@ -1,6 +1,6 @@
 {
     "name": "bonklib",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "description": "BonkLIB",
     "main": "index.js",
     "scripts": {

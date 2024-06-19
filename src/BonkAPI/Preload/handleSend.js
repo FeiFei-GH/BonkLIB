@@ -48,9 +48,13 @@ bonkAPI.send_GameStart = function (args) {
         //! then assign it back to the args
         var sendObj = {
             mapData: bonkAPI.ISdecode(args[1]["is"]),
-            startData: args[1]["map"],
+            startData: args[1]["gs"],
         };
         bonkAPI.events.fireEvent("gameStart", sendObj);
+
+        //!possibly temporary
+        //allows start packet to be edited
+        args[1]["is"] = bonkAPI.ISencode(sendObj.mapData);
     }
 
     return args;
