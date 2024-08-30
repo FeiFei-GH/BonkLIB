@@ -1,9 +1,9 @@
 //@Main{Load}
 
 bonkHUD.loadStyleSettings();
+bonkHUD.initialize();
 bonkHUD.updateStyleSettings();
 
-bonkHUD.initialize();
 
 //!implement later on a toggle to show or hide ads
 let ad1 = window.top.document.getElementById('adboxverticalCurse');

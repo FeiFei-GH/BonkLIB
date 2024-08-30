@@ -2,11 +2,10 @@
 //@Variables{Preload}
 //@Main{Preload}
 
-// #region //!------------------Load Complete Detection------------------
+//!------------------Load Complete Detection------------------
 bonkLIB.onLoaded = () => {
     //@Variables{Load}
     //@Main{Load}
-    console.log("Document loaded complete");
 };
 
 bonkLIB.checkDocumentReady = () => {
@@ -21,4 +20,3 @@ bonkLIB.checkDocumentReady = () => {
 
 // Call the function to check document readiness
 bonkLIB.checkDocumentReady();
-// #endregion
