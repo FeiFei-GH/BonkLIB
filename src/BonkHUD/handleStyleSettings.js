@@ -79,8 +79,9 @@ bonkHUD.resetStyleSettings = function () {
         headerColor: {class:"bonkhud-header-color", css:"background-color", color:"#009688"},
         titleColor: {class:"bonkhud-title-color", css:"color", color:"#ffffff"},
         textColor: {class:"bonkhud-text-color", css:"color", color:"#000000"},
+        secondaryTextColor: {class:"bonkhud-secondary-text-color", css:"color", color:"#505050"},
         buttonColor: {class:"bonkhud-button-color", css:"background-color", color:"#bcc4bb"},
-        buttonColorHover: {class:"bonkhud-button-color", css:"background-color", color:"#acb9ad"},
+        buttonColorHover: {class:"bonkhud-button-color-hover", css:"background-color", color:"#acb9ad"},
     };
 };
 
