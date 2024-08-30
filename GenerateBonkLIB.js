@@ -84,5 +84,5 @@ bonkLIB.version = "${packageJson.version}";
 ${bonkLIB}
 `;
 
-fs.writeFileSync(`./UserScripts/BonkLIB.user.js`, content);
+fs.writeFileSync(`./UserScript/BonkLIB.user.js`, content);
 console.log('\x1b[32m%s\x1b[0m', 'BonkLIB.user.js Generated!');

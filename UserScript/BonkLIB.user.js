@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         BonkLIB
-// @version      1.0.6
+// @version      1.0.8
 // @author       FeiFei + Clarifi + BoZhi
 // @namespace    https://github.com/FeiFei-GH/BonkLIB
 // @description  BonkAPI + BonkHUD
@@ -15,7 +15,7 @@ https://greasyfork.org/en/scripts/433861-code-injector-bonk-io
 */
 // ! Compitable with Bonk Version 49
 window.bonkLIB = {};
-bonkLIB.version = "1.0.6";
+bonkLIB.version = "1.0.8";
 
 
 window.bonkAPI = {};
@@ -1470,13 +1470,13 @@ bonkAPI.send_RoomCreate = function (args) {
 
     for (let i = 0; i < bonkAPI.currentPlayers.length; i++) {
         /**
-             * When a player leaves or joins.
-             * @event playerChange
-             * @type {object}
-             * @property {number} userID - ID of the player who joined or left
-             * @property {object} userData - Data of the player who joined or left
-             * @property {boolean} hasLeft - Whether the player joined or left 
-             */
+         * When a player leaves or joins.
+         * @event playerChange
+         * @type {object}
+         * @property {number} userID - ID of the player who joined or left
+         * @property {object} userData - Data of the player who joined or left
+         * @property {boolean} hasLeft - Whether the player joined or left
+         */
         if (bonkAPI.events.hasEvent["playerChange"]) {
             var sendObj = { userID: bonkAPI.currentPlayers[i], userData: bonkAPI.playerList[bonkAPI.currentPlayers[i]], hasLeft: true };
             bonkAPI.events.fireEvent("playerChange", sendObj);
@@ -1520,7 +1520,7 @@ bonkAPI.send_RoomCreate = function (args) {
      * @type {object}
      * @property {number} userID - ID of the player who joined or left
      * @property {object} userData - Data of the player who joined or left
-     * @property {boolean} hasLeft - Whether the player joined or left 
+     * @property {boolean} hasLeft - Whether the player joined or left
      */
     if (bonkAPI.events.hasEvent["playerChange"]) {
         var sendObj = { userID: 0, userData: bonkAPI.playerList[0], hasLeft: false };
@@ -1759,7 +1759,7 @@ bonkAPI.injector = function (src) {
     let newCode = `
         K$h[9]=K$h[0][0][K$h[2][138]]()[K$h[2][115]];
         
-        capZoneEventTry: try {
+        bonkAPI_capZoneEventTry: try {
             // Initialize
             let inputState = z0M[0][0];
             let currentFrame = inputState.rl;
@@ -1781,7 +1781,7 @@ bonkAPI.injector = function (src) {
     //! Inject stepEvent fire
     orgCode = `return z0M[720];`;
     newCode = `
-        stepEventTry: try {
+        bonkAPI_stepEventTry: try {
             let inputStateClone = JSON.parse(JSON.stringify(z0M[0][0]));
             let currentFrame = inputStateClone.rl;
             let gameStateClone = JSON.parse(JSON.stringify(z0M[720]));
@@ -1806,7 +1806,7 @@ bonkAPI.injector = function (src) {
     newCode = `
         Y3z[8]++;
         
-        frameIncEventTry: try {
+        bonkAPI_frameIncEventTry: try {
             if (window.bonkAPI.events.hasEvent["frameIncEvent"]) {
                 var sendObj = { frame: Y3z[8], gameStates: o3x[7] };
                 
@@ -2218,8 +2218,9 @@ bonkHUD.resetStyleSettings = function () {
         headerColor: {class:"bonkhud-header-color", css:"background-color", color:"#009688"},
         titleColor: {class:"bonkhud-title-color", css:"color", color:"#ffffff"},
         textColor: {class:"bonkhud-text-color", css:"color", color:"#000000"},
+        secondaryTextColor: {class:"bonkhud-secondary-text-color", css:"color", color:"#505050"},
         buttonColor: {class:"bonkhud-button-color", css:"background-color", color:"#bcc4bb"},
-        buttonColorHover: {class:"bonkhud-button-color", css:"background-color", color:"#acb9ad"},
+        buttonColorHover: {class:"bonkhud-button-color-hover", css:"background-color", color:"#acb9ad"},
     };
 };
 
@@ -3637,9 +3638,9 @@ if(bonkAPI.events.hasEvent["graphicsReady"]) {
 }
 
 bonkHUD.loadStyleSettings();
+bonkHUD.initialize();
 bonkHUD.updateStyleSettings();
 
-bonkHUD.initialize();
 
 //!implement later on a toggle to show or hide ads
 let ad1 = window.top.document.getElementById('adboxverticalCurse');
