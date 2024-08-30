@@ -80,7 +80,7 @@ bonkHUD.resetStyleSettings = function () {
         titleColor: {class:"bonkhud-title-color", css:"color", color:"#ffffff"},
         textColor: {class:"bonkhud-text-color", css:"color", color:"#000000"},
         buttonColor: {class:"bonkhud-button-color", css:"background-color", color:"#bcc4bb"},
-        buttonColorHover: {class:"bonkhud-button-color", css:"background-color", color:"#acb9ad"},
+        buttonColorHover: {class:"bonkhud-button-color-hover", css:"background-color", color:"#acb9ad"},
     };
 };
 
