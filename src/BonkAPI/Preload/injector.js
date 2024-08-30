@@ -9,7 +9,7 @@ bonkAPI.injector = function (src) {
     let newCode = `
         K$h[9]=K$h[0][0][K$h[2][138]]()[K$h[2][115]];
         
-        capZoneEventTry: try {
+        bonkAPI_capZoneEventTry: try {
             // Initialize
             let inputState = z0M[0][0];
             let currentFrame = inputState.rl;
@@ -31,7 +31,7 @@ bonkAPI.injector = function (src) {
     //! Inject stepEvent fire
     orgCode = `return z0M[720];`;
     newCode = `
-        stepEventTry: try {
+        bonkAPI_stepEventTry: try {
             let inputStateClone = JSON.parse(JSON.stringify(z0M[0][0]));
             let currentFrame = inputStateClone.rl;
             let gameStateClone = JSON.parse(JSON.stringify(z0M[720]));
@@ -56,7 +56,7 @@ bonkAPI.injector = function (src) {
     newCode = `
         Y3z[8]++;
         
-        frameIncEventTry: try {
+        bonkAPI_frameIncEventTry: try {
             if (window.bonkAPI.events.hasEvent["frameIncEvent"]) {
                 var sendObj = { frame: Y3z[8], gameStates: o3x[7] };
                 

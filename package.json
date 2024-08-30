@@ -1,10 +1,11 @@
 {
     "name": "bonklib",
-    "version": "1.0.4",
+    "version": "1.0.6",
     "description": "BonkLIB",
     "main": "index.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
+        "prebuild": "npm version patch --no-git-tag-version",
         "build": "node GenerateBonkLIB.js",
         "generate-docs": "jsdoc --configure jsdoc.json --verbose"
     },
@@ -19,6 +20,7 @@
     },
     "homepage": "https://github.com/FeiFei-GH/BonkLIB#readme",
     "dependencies": {
+        "bonklib": "file:",
         "clean-jsdoc-theme": "^4.2.18",
         "jsdoc": "^4.0.2"
     }

@@ -103,13 +103,13 @@ bonkAPI.send_RoomCreate = function (args) {
 
     for (let i = 0; i < bonkAPI.currentPlayers.length; i++) {
         /**
-             * When a player leaves or joins.
-             * @event playerChange
-             * @type {object}
-             * @property {number} userID - ID of the player who joined or left
-             * @property {object} userData - Data of the player who joined or left
-             * @property {boolean} hasLeft - Whether the player joined or left 
-             */
+         * When a player leaves or joins.
+         * @event playerChange
+         * @type {object}
+         * @property {number} userID - ID of the player who joined or left
+         * @property {object} userData - Data of the player who joined or left
+         * @property {boolean} hasLeft - Whether the player joined or left
+         */
         if (bonkAPI.events.hasEvent["playerChange"]) {
             var sendObj = { userID: bonkAPI.currentPlayers[i], userData: bonkAPI.playerList[bonkAPI.currentPlayers[i]], hasLeft: true };
             bonkAPI.events.fireEvent("playerChange", sendObj);
@@ -153,7 +153,7 @@ bonkAPI.send_RoomCreate = function (args) {
      * @type {object}
      * @property {number} userID - ID of the player who joined or left
      * @property {object} userData - Data of the player who joined or left
-     * @property {boolean} hasLeft - Whether the player joined or left 
+     * @property {boolean} hasLeft - Whether the player joined or left
      */
     if (bonkAPI.events.hasEvent["playerChange"]) {
         var sendObj = { userID: 0, userData: bonkAPI.playerList[0], hasLeft: false };
