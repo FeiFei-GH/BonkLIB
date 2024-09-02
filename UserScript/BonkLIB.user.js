@@ -15,7 +15,7 @@ https://greasyfork.org/en/scripts/433861-code-injector-bonk-io
 */
 // ! Compitable with Bonk Version 49
 window.bonkLIB = {};
-bonkLIB.version = "1.0.11";
+bonkLIB.version = "1.1.0";
 
 window.bonkAPI = {};
 
