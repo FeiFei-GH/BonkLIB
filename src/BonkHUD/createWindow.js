@@ -14,7 +14,7 @@ bonkHUD.createWindow = function (windowName, windowContent, opts = {}) {
     if(opts.hasOwnProperty("bonkLIBVersion")) {
         if(opts.bonkLIBVersion != bonkLIB.version) {
             if(typeof opts.bonkLIBVersion === 'string') {
-                if(opts.bonkLIBVersion.substring(0, opts.bonkLIBVersion.indexOf(".")) == bonkLIB.version.substring(0, opts.bonkLIBVersion.indexOf(".")))
+                if(opts.bonkLIBVersion.substring(0, opts.bonkLIBVersion.lastIndexOf(".")) != bonkLIB.version.substring(0, bonkLIB.version.lastIndexOf(".")))
                     alert(windowName + " may not be compatible with current version of BonkLIB ("+opts.bonkLIBVersion+" =/= "+bonkLIB.version+")");
                 console.log(windowName + " may not be compatible with current version of BonkLIB ("+opts.bonkLIBVersion+" =/= "+bonkLIB.version+")");
             }
