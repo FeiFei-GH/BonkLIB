@@ -30,6 +30,11 @@ bonkHUD.createWindow = function (windowName, windowContent, opts = {}) {
     /*if(opts.hasOwnProperty("bonkVersion")) {
         
     }*/
+    let idCounter = 0
+    while(document.getElementById(id) != null) {
+        id = "bonkHUD_window_" + windowName + idCounter
+        idCounter++
+    }
 
     //(name, id, recVersion, bodyHTML, settingElement = 0) {
 
