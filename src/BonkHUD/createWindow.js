@@ -171,4 +171,6 @@ bonkHUD.createWindow = function (windowName, windowContent, opts = {}) {
     dragSW.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem, "sw"));
 
     bonkHUD.updateStyleSettings(); //! probably slow but it works, its not like someone will have 100's of windows
+
+    return id
 };
