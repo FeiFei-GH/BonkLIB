@@ -12,6 +12,4 @@ Work in feature branch, when feel ready, push to dev.
 ## Usage
 Use `npm install` when first pulling from this branch as well as when node modules are changed.
 
-Before build(generate) script, please check `npm version [ major | minor | patch ]`.
-Right now the "prebuild" will patch the version.
-Build bonkLIB with `npm run build`.
+Build bonkLIB userscript with `npm run build [ major | minor | patch ]`.
