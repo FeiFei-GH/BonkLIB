@@ -4,9 +4,8 @@
     "description": "BonkLIB",
     "main": "index.js",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1",
-        "prebuild": "npm version patch --no-git-tag-version",
-        "build": "node GenerateBonkLIB.js",
+        "test": "echo \"Will we ever have unit tests?\"",
+        "build": "node BuildWithVersion.js",
         "generate-docs": "jsdoc --configure jsdoc.json --verbose"
     },
     "repository": {
