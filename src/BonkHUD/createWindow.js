@@ -83,6 +83,7 @@ bonkHUD.createWindow = function (windowName, windowContent, opts = {}) {
     header.classList.add("newbonklobby_boxtop");
     header.classList.add("newbonklobby_boxtop_classic");
     header.classList.add("bonkhud-header-color");
+    header.style.borderRadius = "0px";
     header.style.visibility = "visible";
 
     // Create the title span
@@ -159,9 +160,11 @@ bonkHUD.createWindow = function (windowName, windowContent, opts = {}) {
     openCloseButton.addEventListener('mousedown', (e) => {
         if(openCloseButton.innerText == "△") {
             dragItem.style.visibility = "hidden";
+            header.style.borderRadius = "8px";
             openCloseButton.innerText = "▽";
         } else {
             dragItem.style.visibility = "visible";
+            header.style.borderRadius = "0px";
             openCloseButton.innerText = "△";
         }
     });

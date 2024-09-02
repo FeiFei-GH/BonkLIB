@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         BonkLIB
-// @version      1.0.10
+// @version      1.1.0
 // @author       FeiFei + Clarifi + BoZhi
 // @namespace    https://github.com/FeiFei-GH/BonkLIB
 // @description  BonkAPI + BonkHUD
@@ -15,7 +15,7 @@ https://greasyfork.org/en/scripts/433861-code-injector-bonk-io
 */
 // ! Compitable with Bonk Version 49
 window.bonkLIB = {};
-bonkLIB.version = "1.0.10";
+bonkLIB.version = "1.0.11";
 
 window.bonkAPI = {};
 
@@ -1860,7 +1860,7 @@ bonkHUD.createWindow = function (windowName, windowContent, opts = {}) {
     if(opts.hasOwnProperty("bonkLIBVersion")) {
         if(opts.bonkLIBVersion != bonkLIB.version) {
             if(typeof opts.bonkLIBVersion === 'string') {
-                if(opts.bonkLIBVersion.substring(0, opts.bonkLIBVersion.indexOf(".")) == bonkLIB.version.substring(0, opts.bonkLIBVersion.indexOf(".")))
+                if(opts.bonkLIBVersion.substring(0, opts.bonkLIBVersion.lastIndexOf(".")) != bonkLIB.version.substring(0, bonkLIB.version.lastIndexOf(".")))
                     alert(windowName + " may not be compatible with current version of BonkLIB ("+opts.bonkLIBVersion+" =/= "+bonkLIB.version+")");
                 console.log(windowName + " may not be compatible with current version of BonkLIB ("+opts.bonkLIBVersion+" =/= "+bonkLIB.version+")");
             }
@@ -1929,6 +1929,7 @@ bonkHUD.createWindow = function (windowName, windowContent, opts = {}) {
     header.classList.add("newbonklobby_boxtop");
     header.classList.add("newbonklobby_boxtop_classic");
     header.classList.add("bonkhud-header-color");
+    header.style.borderRadius = "0px";
     header.style.visibility = "visible";
 
     // Create the title span
@@ -2005,9 +2006,11 @@ bonkHUD.createWindow = function (windowName, windowContent, opts = {}) {
     openCloseButton.addEventListener('mousedown', (e) => {
         if(openCloseButton.innerText == "△") {
             dragItem.style.visibility = "hidden";
+            header.style.borderRadius = "8px";
             openCloseButton.innerText = "▽";
         } else {
             dragItem.style.visibility = "visible";
+            header.style.borderRadius = "0px";
             openCloseButton.innerText = "△";
         }
     });
