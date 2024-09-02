@@ -1,6 +1,6 @@
 //@Main{Preload}
 
-bonkHUD.createWindow = function (windowName, windowContent, opts) {
+bonkHUD.createWindow = function (windowName, windowContent, opts = {}) {
     //! Currently not checking for repeating ids
     let id = "bonkHUD_window_" + windowName; 
     let modVersion = "1.0.0";
