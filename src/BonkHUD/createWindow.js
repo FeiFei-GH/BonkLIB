@@ -1,16 +1,42 @@
 //@Main{Preload}
 
-bonkHUD.createWindow = function (name, id, recVersion, bodyHTML, settingElement = 0) {
-    if(recVersion != bonkLIB.version) {
-        if(typeof recVersion === 'string') {
-            if(recVersion.substring(0,recVersion.indexOf(".")) == bonkLIB.version.substring(0, recVersion.indexOf(".")))
-                alert(name + " may not be compatible with current version of BonkLIB ("+recVersion+" =/= "+bonkLIB.version+")");
-            console.log(name + " may not be compatible with current version of BonkLIB ("+recVersion+" =/= "+bonkLIB.version+")");
-        }
-        else {
-            alert("Version is incompatible, please check with mod maker to fix");
+bonkHUD.createWindow = function (windowName, windowContent, opts = {}) {
+    //! Currently not checking for repeating ids
+    let id = "bonkHUD_window_" + windowName; 
+    let modVersion = "1.0.0";
+    let settingElement = 0
+    if(opts.hasOwnProperty("windowId")) {
+        id = opts.windowId
+    }
+    if(opts.hasOwnProperty("modVersion")) {
+        modVersion = opts.modVersion
+    }
+    if(opts.hasOwnProperty("bonkLIBVersion")) {
+        if(opts.bonkLIBVersion != bonkLIB.version) {
+            if(typeof opts.bonkLIBVersion === 'string') {
+                if(opts.bonkLIBVersion.substring(0, opts.bonkLIBVersion.lastIndexOf(".")) != bonkLIB.version.substring(0, bonkLIB.version.lastIndexOf(".")))
+                    alert(windowName + " may not be compatible with current version of BonkLIB ("+opts.bonkLIBVersion+" =/= "+bonkLIB.version+")");
+                console.log(windowName + " may not be compatible with current version of BonkLIB ("+opts.bonkLIBVersion+" =/= "+bonkLIB.version+")");
+            }
+            else {
+                alert("Version is incompatible, please check with mod maker to fix");
+            }
         }
     }
+    if(opts.hasOwnProperty("settingsContent")) {
+        settingElement = opts.settingsContent
+    }
+    //! ignoring for now
+    /*if(opts.hasOwnProperty("bonkVersion")) {
+        
+    }*/
+    let idCounter = 0
+    while(document.getElementById(id) != null) {
+        id = "bonkHUD_window_" + windowName + idCounter
+        idCounter++
+    }
+
+    //(name, id, recVersion, bodyHTML, settingElement = 0) {
 
     let ind = bonkHUD.getWindowIndexByID(id);
     if (ind == -1) {
@@ -57,13 +83,14 @@ bonkHUD.createWindow = function (name, id, recVersion, bodyHTML, settingElement 
     header.classList.add("newbonklobby_boxtop");
     header.classList.add("newbonklobby_boxtop_classic");
     header.classList.add("bonkhud-header-color");
+    header.style.borderRadius = "0px";
     header.style.visibility = "visible";
 
     // Create the title span
     let title = document.createElement("span");
     title.classList.add("bonkhud-drag-header");
     title.classList.add("bonkhud-title-color");
-    title.textContent = name;
+    title.textContent = windowName;
     title.style.flexGrow = "1";
     title.style.textAlign = "center";
 
@@ -99,20 +126,20 @@ bonkHUD.createWindow = function (name, id, recVersion, bodyHTML, settingElement 
     dragItem.appendChild(header);
 
     // Create the key table
-    bodyHTML.id = id;
-    bodyHTML.classList.add("bonkhud-text-color");
-    bodyHTML.classList.add("bonkhud-scrollbar-kit");
-    bodyHTML.classList.add("bonkhud-scrollbar-other");
-    bodyHTML.style.overflowY = "scroll";
-    bodyHTML.style.padding = "5px";
-    bodyHTML.style.width = "calc(100% - 10px)";
-    bodyHTML.style.height = "calc(100% - 42px)"; // Adjusted height for header
+    windowContent.id = id;
+    windowContent.classList.add("bonkhud-text-color");
+    windowContent.classList.add("bonkhud-scrollbar-kit");
+    windowContent.classList.add("bonkhud-scrollbar-other");
+    windowContent.style.overflowY = "scroll";
+    windowContent.style.padding = "5px";
+    windowContent.style.width = "calc(100% - 10px)";
+    windowContent.style.height = "calc(100% - 42px)"; // Adjusted height for header
 
     // Append the keyTable to the dragItem
-    dragItem.appendChild(bodyHTML);
+    dragItem.appendChild(windowContent);
 
     // Append the opacity control to the dragItem
-    let opacityControl = bonkHUD.createWindowControl(name, recVersion, ind, settingElement);
+    let opacityControl = bonkHUD.createWindowControl(windowName, modVersion, ind, settingElement);
     document.getElementById("bonkhud-window-settings-container").appendChild(opacityControl);
 
     // Append the dragItem to the body of the page
@@ -133,9 +160,11 @@ bonkHUD.createWindow = function (name, id, recVersion, bodyHTML, settingElement 
     openCloseButton.addEventListener('mousedown', (e) => {
         if(openCloseButton.innerText == "△") {
             dragItem.style.visibility = "hidden";
+            header.style.borderRadius = "8px";
             openCloseButton.innerText = "▽";
         } else {
             dragItem.style.visibility = "visible";
+            header.style.borderRadius = "0px";
             openCloseButton.innerText = "△";
         }
     });
@@ -145,4 +174,6 @@ bonkHUD.createWindow = function (name, id, recVersion, bodyHTML, settingElement 
     dragSW.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem, "sw"));
 
     bonkHUD.updateStyleSettings(); //! probably slow but it works, its not like someone will have 100's of windows
+
+    return id
 };
