@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         BonkLIB
-// @version      1.1.0
+// @version      1.1.1
 // @author       FeiFei + Clarifi + BoZhi
 // @namespace    https://github.com/FeiFei-GH/BonkLIB
 // @description  BonkAPI + BonkHUD
 // @license      MIT
-// @match        https://*.bonk.io/gameframe-release.html
+// @match        https://bonk.io/gameframe-release.html
 // @run-at       document-start
 // @grant        none
 // ==/UserScript==
@@ -15,7 +15,7 @@ https://greasyfork.org/en/scripts/433861-code-injector-bonk-io
 */
 // ! Compitable with Bonk Version 49
 window.bonkLIB = {};
-bonkLIB.version = "1.1.0";
+bonkLIB.version = "1.1.1";
 
 window.bonkAPI = {};
 
@@ -2021,7 +2021,7 @@ bonkHUD.createWindow = function (windowName, windowContent, opts = {}) {
 
     bonkHUD.updateStyleSettings(); //! probably slow but it works, its not like someone will have 100's of windows
 
-    return id
+    return windowContent
 };
 bonkHUD.dragStart = function (e, dragItem) {
     bonkHUD.focusWindow(dragItem);
