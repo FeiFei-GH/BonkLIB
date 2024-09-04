@@ -69,7 +69,7 @@ const content = `// ==UserScript==
 // @namespace    https://github.com/FeiFei-GH/BonkLIB
 // @description  BonkAPI + BonkHUD
 // @license      MIT
-// @match        https://*.bonk.io/gameframe-release.html
+// @match        https://bonk.io/gameframe-release.html
 // @run-at       document-start
 // @grant        none
 // ==/UserScript==

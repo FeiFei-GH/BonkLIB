@@ -175,5 +175,5 @@ bonkHUD.createWindow = function (windowName, windowContent, opts = {}) {
 
     bonkHUD.updateStyleSettings(); //! probably slow but it works, its not like someone will have 100's of windows
 
-    return id
+    return windowContent
 };
