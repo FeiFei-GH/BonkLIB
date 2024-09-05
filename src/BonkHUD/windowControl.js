@@ -37,7 +37,7 @@ bonkHUD.createWindowControl = function (name, recVersion, ind, settingsElement =
         let control = document.getElementById(bonkHUD.windowHold[ind].id + "-drag"); // Update the UI opacity in real-time;
         control.style.opacity = this.value;
         bonkHUD.windowHold[ind].opacity = control.style.opacity;
-        bonkHUD.saveUISetting(bonkHUD.windowHold[ind].id);
+        bonkHUD.saveUISetting(ind);
     };
     holdLeft.appendChild(opacitySlider); // Place the slider into the slider container
 
@@ -65,7 +65,7 @@ bonkHUD.createWindowControl = function (name, recVersion, ind, settingsElement =
         let control = document.getElementById(bonkHUD.windowHold[ind].id + "-drag"); // Update the UI opacity in real-time;
         control.style.display = this.checked ? "block" : "none";
         bonkHUD.windowHold[ind].display = control.style.display;
-        bonkHUD.saveUISetting(bonkHUD.windowHold[ind].id);
+        bonkHUD.saveUISetting(ind);
     };
     holdRight.appendChild(visiblityCheck); // Place the slider into the slider container
 

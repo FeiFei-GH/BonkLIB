@@ -1,8 +1,7 @@
 //@Main{Preload}
 
-bonkHUD.saveUISetting = function (id) {
-    let ind = bonkHUD.getWindowIndexByID(id);
-    let save_id = 'bonkHUD_Setting_' + id;
+bonkHUD.saveUISetting = function (ind) {
+    let save_id = 'bonkHUD_Setting_' + bonkHUD.windowHold[ind].id;
     localStorage.setItem(save_id, JSON.stringify(bonkHUD.windowHold[ind]));
 };
 

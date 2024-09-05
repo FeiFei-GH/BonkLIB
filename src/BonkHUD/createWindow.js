@@ -1,7 +1,6 @@
 //@Main{Preload}
 
 bonkHUD.createWindow = function (windowName, windowContent, opts = {}) {
-    //! Currently not checking for repeating ids
     let id = "bonkHUD_window_" + windowName; 
     let modVersion = "1.0.0";
     let settingElement = 0
@@ -150,11 +149,11 @@ bonkHUD.createWindow = function (windowName, windowContent, opts = {}) {
         let visCheck = document.getElementById(id + "-visibility-check");
         visCheck.checked = false;
         bonkHUD.windowHold[ind].display = dragItem.style.display;
-        bonkHUD.saveUISetting(id);
+        bonkHUD.saveUISetting(ind);
     });
 
     // Add event listeners for dragging
-    dragItem.addEventListener('mousedown', (e) => bonkHUD.dragStart(e, dragItem));
+    dragItem.addEventListener('mousedown', (e) => bonkHUD.dragStart(e, dragItem, ind));
 
     // Add event listeners for resizing
     openCloseButton.addEventListener('mousedown', (e) => {
@@ -168,10 +167,10 @@ bonkHUD.createWindow = function (windowName, windowContent, opts = {}) {
             openCloseButton.innerText = "△";
         }
     });
-    dragNW.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem, "nw"));
-    dragNE.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem, "ne"));
-    dragSE.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem, "se"));
-    dragSW.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem, "sw"));
+    dragNW.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem, "nw", ind));
+    dragNE.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem, "ne", ind));
+    dragSE.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem, "se", ind));
+    dragSW.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem, "sw", ind));
 
     bonkHUD.updateStyleSettings(); //! probably slow but it works, its not like someone will have 100's of windows
 
