@@ -74,8 +74,8 @@ bonkHUD.createWindowControl = function (name, recVersion, ind, settingsElement =
     windowResetButton.style.paddingRight = "5px";
     windowResetButton.style.display = "inline-block";
     windowResetButton.addEventListener('click', (e) => {
-        bonkHUD.resetUISetting(bonkHUD.windowHold[ind].id);
-        bonkHUD.loadUISetting(bonkHUD.windowHold[ind].id);
+        bonkHUD.resetUISetting(ind);
+        bonkHUD.loadUISetting(ind);
     });
 
     sliderRow.appendChild(holdLeft);

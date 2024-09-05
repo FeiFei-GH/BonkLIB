@@ -39,8 +39,8 @@ bonkHUD.createWindow = function (windowName, windowContent, opts = {}) {
 
     let ind = bonkHUD.getWindowIndexByID(id);
     if (ind == -1) {
-        bonkHUD.windowHold.push(bonkHUD.getUISetting(id));
-        ind = bonkHUD.windowHold.length - 1;
+        ind = bonkHUD.windowHold.length;
+        bonkHUD.windowHold.push(bonkHUD.getUISetting(ind));
     }
 
     // Create the main container 'dragItem'
