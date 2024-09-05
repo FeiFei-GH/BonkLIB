@@ -18,3 +18,10 @@ bonkHUD.generateButton = function (name) {
     });
     return newButton;
 }
+
+bonkHUD.generateSection = function () {
+    let sliderRow = document.createElement("div");
+    sliderRow.classList.add("bonkhud-settings-row");
+    sliderRow.classList.add("bonkhud-border-color");
+    return sliderRow;
+}

@@ -1,10 +1,8 @@
 //@Main{Preload}
 
-bonkHUD.createWindowControl = function (name, recVersion, ind, settingsElement = 0) {
+bonkHUD.createMenuHeader = function (name, recVersion) {
     // Create container for the opacity controls with initial styles
-    let sliderRow = document.createElement("div");
-    sliderRow.classList.add("bonkhud-settings-row");
-    sliderRow.classList.add("bonkhud-border-color");
+    let sliderRow = bonkHUD.generateSection();
 
     // Add a title to the slider row for visual clarity
     let sliderTitle = document.createElement("div");
@@ -13,6 +11,12 @@ bonkHUD.createWindowControl = function (name, recVersion, ind, settingsElement =
     sliderTitle.style.fontSize = "1.2rem"; // Text size for readability
     sliderTitle.style.fontWeight = "bold"; // Make the title text bold
     sliderRow.appendChild(sliderTitle); // Insert the title into the slider container
+
+    document.getElementById("bonkhud-window-settings-container").appendChild(sliderRow);
+}
+
+bonkHUD.createWindowControl = function (ind) {
+    let sliderRow = bonkHUD.generateSection();
 
     let holdLeft = document.createElement("div");
     holdLeft.style.display = "flex";
@@ -82,12 +86,7 @@ bonkHUD.createWindowControl = function (name, recVersion, ind, settingsElement =
     sliderRow.appendChild(holdRight);
     sliderRow.appendChild(windowResetButton);
 
-    //! may instead make it so when sliderrow is focused, the
-    //! seetings appear on the big settings menu
-    if(settingsElement !== 0 && settingsElement instanceof Node)
-        sliderRow.appendChild(settingsElement);
-
-    return sliderRow; // Return the fully constructed slider row element
+    bonkHUD.settingsHold[ind].settings.appendChild(sliderRow);
 };
 
 bonkHUD.focusWindow = function (focusItem) {

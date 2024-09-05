@@ -1,9 +1,9 @@
 //@Main{Preload}
 
 bonkHUD.createWindow = function (windowName, windowContent, opts = {}) {
+    //* leaving this for backwards compatability fr
     let id = "bonkHUD_window_" + windowName; 
     let modVersion = "1.0.0";
-    let settingElement = 0
     if(opts.hasOwnProperty("windowId")) {
         id = opts.windowId
     }
@@ -22,9 +22,6 @@ bonkHUD.createWindow = function (windowName, windowContent, opts = {}) {
             }
         }
     }
-    if(opts.hasOwnProperty("settingsContent")) {
-        settingElement = opts.settingsContent
-    }
     //! ignoring for now
     /*if(opts.hasOwnProperty("bonkVersion")) {
         
@@ -36,11 +33,16 @@ bonkHUD.createWindow = function (windowName, windowContent, opts = {}) {
     }
 
     //(name, id, recVersion, bodyHTML, settingElement = 0) {
+    let ind = bonkHUD.settingsHold.length;
+    bonkHUD.settingsHold.push({ id: id, settings: document.createElement("div") })
+    bonkHUD.windowHold[ind]({ id: id });
+    bonkHUD.windowHold[ind] = bonkHUD.getUISetting(ind)
 
-    let ind = bonkHUD.getWindowIndexByID(id);
-    if (ind == -1) {
-        ind = bonkHUD.windowHold.length;
-        bonkHUD.windowHold.push(bonkHUD.getUISetting(ind));
+    // Create Settings controller
+    bonkHUD.createMenuHeader(windowName, modVersion);
+    bonkHUD.createWindowControl(windowName, modVersion, ind);
+    if(opts.hasOwnProperty("settingsContent")) {
+        bonkHUD.createSettingsControl(windowName, modVersion, ind, settingElement);
     }
 
     // Create the main container 'dragItem'
@@ -134,12 +136,8 @@ bonkHUD.createWindow = function (windowName, windowContent, opts = {}) {
     windowContent.style.width = "calc(100% - 10px)";
     windowContent.style.height = "calc(100% - 42px)"; // Adjusted height for header
 
-    // Append the keyTable to the dragItem
+    // Append the content to the dragItem
     dragItem.appendChild(windowContent);
-
-    // Append the opacity control to the dragItem
-    let opacityControl = bonkHUD.createWindowControl(windowName, modVersion, ind, settingElement);
-    document.getElementById("bonkhud-window-settings-container").appendChild(opacityControl);
 
     // Append the dragItem to the body of the page
     document.body.appendChild(dragItem);
@@ -174,5 +172,42 @@ bonkHUD.createWindow = function (windowName, windowContent, opts = {}) {
 
     bonkHUD.updateStyleSettings(); //! probably slow but it works, its not like someone will have 100's of windows
 
-    return windowContent
+    return ind;
 };
+
+bonkHUD.createMod = function (modName, opts = {}) {
+    if(opts.hasOwnProperty("bonkLIBVersion")) {
+        if(opts.bonkLIBVersion != bonkLIB.version) {
+            if(typeof opts.bonkLIBVersion === 'string') {
+                if(opts.bonkLIBVersion.substring(0, opts.bonkLIBVersion.lastIndexOf(".")) != bonkLIB.version.substring(0, bonkLIB.version.lastIndexOf(".")))
+                    alert(windowName + " may not be compatible with current version of BonkLIB ("+opts.bonkLIBVersion+" =/= "+bonkLIB.version+")");
+                console.log(windowName + " may not be compatible with current version of BonkLIB ("+opts.bonkLIBVersion+" =/= "+bonkLIB.version+")");
+            }
+            else {
+                alert("Version is incompatible, please check with mod maker to fix");
+            }
+        }
+    }
+
+    if(opts.hasOwnProperty("noWindow") && opts.noWindow) {
+        let id = modName;
+        let modVersion = "1.0.0";
+        if(opts.hasOwnProperty("modVersion")) {
+            modVersion = opts.modVersion;
+        }
+
+        let ind = bonkHUD.settingsHold.length;
+        bonkHUD.settingsHold.push({ id: id, settings: document.createElement("div") })
+
+        // Create Settings controller
+        bonkHUD.createMenuHeader(modName, modVersion);
+        if(opts.hasOwnProperty("settingsContent")) {
+            bonkHUD.createSettingsControl(ind, settingElement);
+        }
+        return ind;
+    } else {
+        if(opts.hasOwnProperty("windowContent")) {
+            return bonkHUD.createWindow(modName, opts.windowContent, opts);
+        }
+    }
+}
