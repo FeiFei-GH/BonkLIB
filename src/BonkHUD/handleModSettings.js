@@ -39,4 +39,4 @@ bonkHUD.resetModSetting = function (ind) {
 
 bonkHUD.createSettingsControl = function (ind, settingsElement) {
     bonkHUD.settingsHold[ind].settings.appendChild(settingsElement);
-}
+};

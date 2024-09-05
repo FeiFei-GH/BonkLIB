@@ -210,4 +210,4 @@ bonkHUD.createMod = function (modName, opts = {}) {
             return bonkHUD.createWindow(modName, opts.windowContent, opts);
         }
     }
-}
+};
