@@ -34,17 +34,19 @@ bonkHUD.createWindow = function (windowName, windowContent, opts = {}) {
 
     //(name, id, recVersion, bodyHTML, settingElement = 0) {
     let ind = bonkHUD.settingsHold.length;
-    bonkHUD.settingsHold.push({ id: id, settings: document.createElement("div") })
-    bonkHUD.windowHold[ind]({ id: id });
+    bonkHUD.settingsHold.push(id)
+    bonkHUD.windowHold[ind] = { id: id };
     bonkHUD.windowHold[ind] = bonkHUD.getUISetting(ind)
 
     // Create Settings controller
-    bonkHUD.createMenuHeader(windowName, modVersion);
-    bonkHUD.createWindowControl(windowName, modVersion, ind);
+    let fullSettingsDiv = document.createElement("div");
+    bonkHUD.createWindowControl(ind, fullSettingsDiv);
     if(opts.hasOwnProperty("settingsContent")) {
-        bonkHUD.createSettingsControl(windowName, modVersion, ind, settingElement);
+        bonkHUD.createSettingsControl(opts.settingsContent, fullSettingsDiv);
     }
+    bonkHUD.createMenuHeader(windowName, fullSettingsDiv, modVersion);
 
+    //! POSSIBLY MOVE EVERYTHING ABOVE TO createMod TO MAKE CLEANER BUT NOT BACKWARDS COMPATIBLE
     // Create the main container 'dragItem'
     let dragItem = document.createElement("div");
     dragItem.classList.add("bonkhud-window-container");
@@ -197,13 +199,14 @@ bonkHUD.createMod = function (modName, opts = {}) {
         }
 
         let ind = bonkHUD.settingsHold.length;
-        bonkHUD.settingsHold.push({ id: id, settings: document.createElement("div") })
+        bonkHUD.settingsHold.push(id)
 
         // Create Settings controller
-        bonkHUD.createMenuHeader(modName, modVersion);
+        let fullSettingsDiv = document.createElement("div");
         if(opts.hasOwnProperty("settingsContent")) {
-            bonkHUD.createSettingsControl(ind, settingElement);
+            bonkHUD.createSettingsControl(opts.settingsContent, fullSettingsDiv);
         }
+        bonkHUD.createMenuHeader(modName, fullSettingsDiv, modVersion);
         return ind;
     } else {
         if(opts.hasOwnProperty("windowContent")) {

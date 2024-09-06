@@ -97,14 +97,14 @@ bonkHUD.updateStyleSettings = function () {
         if(prop == "buttonColorHover")
             continue;
         else if(prop == "headerColor") {
-            elements = document.getElementsByClassName(bonkHUD.styleHold[prop].class);
+            let elements = document.getElementsByClassName(bonkHUD.styleHold[prop].class);
             for (let j = 0; j < elements.length; j++) {
                 elements[j].style.setProperty(bonkHUD.styleHold[prop].css, bonkHUD.styleHold[prop].color, "important");
             }
             continue;
         }
         else {
-            elements = document.getElementsByClassName(bonkHUD.styleHold[prop].class);
+            let elements = document.getElementsByClassName(bonkHUD.styleHold[prop].class);
             for (let j = 0; j < elements.length; j++) {
                 elements[j].style.setProperty(bonkHUD.styleHold[prop].css, bonkHUD.styleHold[prop].color);
             }

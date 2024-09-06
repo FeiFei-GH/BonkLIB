@@ -1,21 +1,46 @@
 //@Main{Preload}
 
-bonkHUD.createMenuHeader = function (name, recVersion) {
+bonkHUD.createMenuHeader = function (name, settingsContent, recVersion = -1) {
     // Create container for the opacity controls with initial styles
     let sliderRow = bonkHUD.generateSection();
 
     // Add a title to the slider row for visual clarity
     let sliderTitle = document.createElement("div");
-    sliderTitle.textContent = name + " ("+recVersion+")";
+    if (recVersion === -1) {
+        sliderTitle.textContent = name;
+    } else {
+        sliderTitle.textContent = name + " ("+recVersion+")";
+    }
     sliderTitle.style.marginBottom = "5px";
     sliderTitle.style.fontSize = "1.2rem"; // Text size for readability
     sliderTitle.style.fontWeight = "bold"; // Make the title text bold
     sliderRow.appendChild(sliderTitle); // Insert the title into the slider container
 
+    //open settings in
+    settingsContent.prepend(sliderRow.cloneNode(true));
+    settingsContent.classList.add("bonkhud-mod-setting-menu");
+    settingsContent.style.display = "none";
+    document.getElementById("bonkhud-settings-container").appendChild(settingsContent);
+
+    sliderRow.addEventListener("click", (e) => {
+        let menus = document.getElementsByClassName("bonkhud-mod-setting-menu");
+        // Could make this without for loop but would need to store last menu
+        for (let i = 0; i < menus.length; i++) {
+            menus[i].style.display = "none";
+        }
+        settingsContent.style.display = "block";
+
+        let titles = document.getElementById("bonkhud-window-settings-container").children;
+        for (let i = 0; i < titles.length; i++) {
+            titles[i].children[0].style.color = bonkHUD.styleHold.textColor.color;
+        }
+        sliderTitle.style.color = bonkHUD.styleHold.secondaryTextColor.color;
+    });
+
     document.getElementById("bonkhud-window-settings-container").appendChild(sliderRow);
 }
 
-bonkHUD.createWindowControl = function (ind) {
+bonkHUD.createWindowControl = function (ind, element) {
     let sliderRow = bonkHUD.generateSection();
 
     let holdLeft = document.createElement("div");
@@ -86,7 +111,8 @@ bonkHUD.createWindowControl = function (ind) {
     sliderRow.appendChild(holdRight);
     sliderRow.appendChild(windowResetButton);
 
-    bonkHUD.settingsHold[ind].settings.appendChild(sliderRow);
+    element.appendChild(sliderRow);
+    //bonkHUD.settingsHold[ind].settings.appendChild(sliderRow);
 };
 
 bonkHUD.focusWindow = function (focusItem) {

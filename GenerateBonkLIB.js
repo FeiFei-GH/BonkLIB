@@ -78,8 +78,6 @@ Usable with:
 https://greasyfork.org/en/scripts/433861-code-injector-bonk-io
 */
 
-'use strict';
-
 // ! Compitable with Bonk Version 49
 window.bonkLIB = {};
 bonkLIB.version = "${packageJson.version}";
