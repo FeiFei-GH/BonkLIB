@@ -1,7 +1,7 @@
 //@Main{Preload}
 
 // Function to start resizing the UI
-bonkHUD.startResizing = function (e, dragItem, dir) {
+bonkHUD.startResizing = function (e, dragItem, dir, ind) {
     e.stopPropagation(); // Prevent triggering dragStart for dragItem
 
     let startX = e.clientX;
@@ -16,7 +16,7 @@ bonkHUD.startResizing = function (e, dragItem, dir) {
     }
 
     function stopResizing() {
-        bonkHUD.resizeEnd(doResize, dragItem);
+        bonkHUD.resizeEnd(doResize, dragItem, ind);
     }
 
     document.addEventListener('mousemove', doResize);
@@ -55,12 +55,12 @@ bonkHUD.resizeMove = function (e, startX, startY, windowX, windowY, startWidth, 
 };
 
 // Function to stop the resize event
-bonkHUD.resizeEnd = function (resizeMoveFn, dragItem, dir) {
+bonkHUD.resizeEnd = function (resizeMoveFn, dragItem, ind) {
     document.removeEventListener('mousemove', resizeMoveFn);
-    let ind = bonkHUD.getWindowIndexByID(dragItem.id.substring(0, dragItem.id.length - 5));
+    //let ind = bonkHUD.getWindowIndexByID(dragItem.id.substring(0, dragItem.id.length - 5));
     bonkHUD.windowHold[ind].width = dragItem.style.width;
     bonkHUD.windowHold[ind].height = dragItem.style.height;
     bonkHUD.windowHold[ind].bottom = dragItem.style.bottom;
     bonkHUD.windowHold[ind].right = dragItem.style.right;
-    bonkHUD.saveUISetting(bonkHUD.windowHold[ind].id);
+    bonkHUD.saveUISetting(ind);
 };

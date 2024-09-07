@@ -2,6 +2,7 @@
 window.bonkHUD = {};
 
 bonkHUD.windowHold = [];
+bonkHUD.settingsHold = [];
 
 //! not used but will be
 // *Style Store

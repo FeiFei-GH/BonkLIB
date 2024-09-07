@@ -1,10 +1,9 @@
 //@Main{Preload}
 
 bonkHUD.createWindow = function (windowName, windowContent, opts = {}) {
-    //! Currently not checking for repeating ids
+    //* leaving this for backwards compatability fr
     let id = "bonkHUD_window_" + windowName; 
     let modVersion = "1.0.0";
-    let settingElement = 0
     if(opts.hasOwnProperty("windowId")) {
         id = opts.windowId
     }
@@ -23,9 +22,6 @@ bonkHUD.createWindow = function (windowName, windowContent, opts = {}) {
             }
         }
     }
-    if(opts.hasOwnProperty("settingsContent")) {
-        settingElement = opts.settingsContent
-    }
     //! ignoring for now
     /*if(opts.hasOwnProperty("bonkVersion")) {
         
@@ -37,13 +33,20 @@ bonkHUD.createWindow = function (windowName, windowContent, opts = {}) {
     }
 
     //(name, id, recVersion, bodyHTML, settingElement = 0) {
+    let ind = bonkHUD.settingsHold.length;
+    bonkHUD.settingsHold.push(id)
+    bonkHUD.windowHold[ind] = { id: id };
+    bonkHUD.windowHold[ind] = bonkHUD.getUISetting(ind)
 
-    let ind = bonkHUD.getWindowIndexByID(id);
-    if (ind == -1) {
-        bonkHUD.windowHold.push(bonkHUD.getUISetting(id));
-        ind = bonkHUD.windowHold.length - 1;
+    // Create Settings controller
+    let fullSettingsDiv = document.createElement("div");
+    bonkHUD.createWindowControl(ind, fullSettingsDiv);
+    if(opts.hasOwnProperty("settingsContent")) {
+        bonkHUD.createSettingsControl(opts.settingsContent, fullSettingsDiv);
     }
+    bonkHUD.createMenuHeader(windowName, fullSettingsDiv, modVersion);
 
+    //! POSSIBLY MOVE EVERYTHING ABOVE TO createMod TO MAKE CLEANER BUT NOT BACKWARDS COMPATIBLE
     // Create the main container 'dragItem'
     let dragItem = document.createElement("div");
     dragItem.classList.add("bonkhud-window-container");
@@ -135,12 +138,8 @@ bonkHUD.createWindow = function (windowName, windowContent, opts = {}) {
     windowContent.style.width = "calc(100% - 10px)";
     windowContent.style.height = "calc(100% - 42px)"; // Adjusted height for header
 
-    // Append the keyTable to the dragItem
+    // Append the content to the dragItem
     dragItem.appendChild(windowContent);
-
-    // Append the opacity control to the dragItem
-    let opacityControl = bonkHUD.createWindowControl(windowName, modVersion, ind, settingElement);
-    document.getElementById("bonkhud-window-settings-container").appendChild(opacityControl);
 
     // Append the dragItem to the body of the page
     document.body.appendChild(dragItem);
@@ -150,11 +149,11 @@ bonkHUD.createWindow = function (windowName, windowContent, opts = {}) {
         let visCheck = document.getElementById(id + "-visibility-check");
         visCheck.checked = false;
         bonkHUD.windowHold[ind].display = dragItem.style.display;
-        bonkHUD.saveUISetting(id);
+        bonkHUD.saveUISetting(ind);
     });
 
     // Add event listeners for dragging
-    dragItem.addEventListener('mousedown', (e) => bonkHUD.dragStart(e, dragItem));
+    dragItem.addEventListener('mousedown', (e) => bonkHUD.dragStart(e, dragItem, ind));
 
     // Add event listeners for resizing
     openCloseButton.addEventListener('mousedown', (e) => {
@@ -168,12 +167,50 @@ bonkHUD.createWindow = function (windowName, windowContent, opts = {}) {
             openCloseButton.innerText = "△";
         }
     });
-    dragNW.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem, "nw"));
-    dragNE.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem, "ne"));
-    dragSE.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem, "se"));
-    dragSW.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem, "sw"));
+    dragNW.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem, "nw", ind));
+    dragNE.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem, "ne", ind));
+    dragSE.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem, "se", ind));
+    dragSW.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem, "sw", ind));
 
     bonkHUD.updateStyleSettings(); //! probably slow but it works, its not like someone will have 100's of windows
 
-    return windowContent
+    return ind;
+};
+
+bonkHUD.createMod = function (modName, opts = {}) {
+    if(opts.hasOwnProperty("bonkLIBVersion")) {
+        if(opts.bonkLIBVersion != bonkLIB.version) {
+            if(typeof opts.bonkLIBVersion === 'string') {
+                if(opts.bonkLIBVersion.substring(0, opts.bonkLIBVersion.lastIndexOf(".")) != bonkLIB.version.substring(0, bonkLIB.version.lastIndexOf(".")))
+                    alert(windowName + " may not be compatible with current version of BonkLIB ("+opts.bonkLIBVersion+" =/= "+bonkLIB.version+")");
+                console.log(windowName + " may not be compatible with current version of BonkLIB ("+opts.bonkLIBVersion+" =/= "+bonkLIB.version+")");
+            }
+            else {
+                alert("Version is incompatible, please check with mod maker to fix");
+            }
+        }
+    }
+
+    if(opts.hasOwnProperty("noWindow") && opts.noWindow) {
+        let id = modName;
+        let modVersion = "1.0.0";
+        if(opts.hasOwnProperty("modVersion")) {
+            modVersion = opts.modVersion;
+        }
+
+        let ind = bonkHUD.settingsHold.length;
+        bonkHUD.settingsHold.push(id)
+
+        // Create Settings controller
+        let fullSettingsDiv = document.createElement("div");
+        if(opts.hasOwnProperty("settingsContent")) {
+            bonkHUD.createSettingsControl(opts.settingsContent, fullSettingsDiv);
+        }
+        bonkHUD.createMenuHeader(modName, fullSettingsDiv, modVersion);
+        return ind;
+    } else {
+        if(opts.hasOwnProperty("windowContent")) {
+            return bonkHUD.createWindow(modName, opts.windowContent, opts);
+        }
+    }
 };

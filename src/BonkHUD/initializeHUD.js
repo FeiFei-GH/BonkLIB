@@ -55,7 +55,7 @@ bonkHUD.initialize = function () {
     windowSettingsContainer.classList.add("bonkhud-border-color");
     windowSettingsContainer.classList.add("bonkhud-scrollbar-kit");
     windowSettingsContainer.classList.add("bonkhud-scrollbar-other");
-    windowSettingsContainer.style.flexGrow = "1.5";
+    windowSettingsContainer.style.width = "35%";
     windowSettingsContainer.style.overflowY = "scroll";
     windowSettingsContainer.style.height = "100%";
     windowSettingsContainer.style.borderRight = "1px solid";
@@ -65,9 +65,12 @@ bonkHUD.initialize = function () {
     settingsContainer.classList.add("bonkhud-scrollbar-other");
     settingsContainer.id = "bonkhud-settings-container";
     settingsContainer.style.overflowY = "scroll";
-    settingsContainer.style.flexGrow = "3";
+    settingsContainer.style.width = "65%";
     settingsContainer.style.float = "right";
     settingsContainer.style.height = "100%";
+
+    // Create holder for mainSettings and styleSettings
+    let generalSettingsDiv = document.createElement("div");
 
     let mainSettingsDiv = document.createElement("div");
     mainSettingsDiv.classList.add("bonkhud-border-color")
@@ -75,9 +78,19 @@ bonkHUD.initialize = function () {
 
     let mainSettingsHeading = document.createElement("div");
     mainSettingsHeading.classList.add("bonkhud-text-color");
-    mainSettingsHeading.textContent = "General Settings";
-    mainSettingsHeading.style.marginBottom = "5px";
     mainSettingsHeading.style.fontSize = "1.2rem";
+    mainSettingsHeading.style.marginBottom = "5px";
+    mainSettingsHeading.textContent = "Main Settings";
+
+    let mainSettingsAdHideLabel = document.createElement("label");
+    mainSettingsAdHideLabel.classList.add("bonkhud-text-color");
+    mainSettingsAdHideLabel.classList.add("bonkhud-settings-label");
+    mainSettingsAdHideLabel.style.marginRight = "5px";
+    mainSettingsAdHideLabel.innerText = "Hide Ads";
+
+    let mainSettingsAdHide = document.createElement("input");
+    mainSettingsAdHide.type = "checkbox";
+    mainSettingsAdHide.checked = false;
 
     let styleResetDiv = document.createElement("div");
     styleResetDiv.style.marginTop = "5px";
@@ -138,6 +151,10 @@ bonkHUD.initialize = function () {
     styleSettingsHeading.style.marginBottom = "5px";
     styleSettingsHeading.textContent = "Style Settings";
 
+    mainSettingsDiv.appendChild(mainSettingsHeading);
+    mainSettingsDiv.appendChild(mainSettingsAdHideLabel);
+    mainSettingsDiv.appendChild(mainSettingsAdHide);
+
     // Append children of style settings to rows
     styleResetDiv.appendChild(styleResetLabel);
     styleResetDiv.appendChild(styleResetButton);
@@ -151,6 +168,28 @@ bonkHUD.initialize = function () {
     styleSettingsDiv.appendChild(styleResetDiv);
     styleSettingsDiv.appendChild(styleExportDiv)
     styleSettingsDiv.appendChild(styleImportDiv);
+
+    let holdLeft = document.createElement("div");
+    holdLeft.style.display = "flex";
+    holdLeft.style.alignContent = "center";
+
+    let opacityLabel = document.createElement("label");
+    opacityLabel.classList.add("bonkhud-settings-label");
+    opacityLabel.textContent = "Opacity";
+
+    let opacitySlider = document.createElement("input");
+    opacitySlider.type = "range"; // Slider type for range selection
+    opacitySlider.min = "0.1"; // Minimum opacity value
+    opacitySlider.max = "1"; // Maximum opacity value (fully opaque)
+    opacitySlider.step = "0.05"; // Incremental steps for opacity adjustment
+    opacitySlider.value = "1"; // Default value set to fully opaque
+    opacitySlider.style.minWidth = "20px";
+    opacitySlider.style.flexGrow = "1"; // Width adjusted for the label
+
+    holdLeft.appendChild(opacityLabel);
+    holdLeft.appendChild(opacitySlider);
+
+    styleSettingsDiv.appendChild(holdLeft);
 
     for (let prop in bonkHUD.styleHold) {
         let colorDiv = document.createElement("div");
@@ -205,14 +244,6 @@ bonkHUD.initialize = function () {
     header.appendChild(title);
     header.appendChild(closeButton)
 
-    // Append children of general settings to rows
-    //? not appending mainSettingsDiv since there is nothing to put in it yet
-    //mainSettingsDiv.appendChild(mainSettingsHeading);
-
-    // Append general setting rows to general settings container
-    //settingsContainer.appendChild(mainSettingsDiv);
-    settingsContainer.appendChild(styleSettingsDiv);
-
     // Append everything to main container (HUD window)
     containerContainer.appendChild(windowSettingsContainer);
     containerContainer.appendChild(settingsContainer);
@@ -224,6 +255,53 @@ bonkHUD.initialize = function () {
     document.getElementById('prettymenu').appendChild(settingsMenu);
     //Place it before help button
     document.getElementById('pretty_top_bar').appendChild(topBarOption);
+
+    // Add settings
+    bonkHUD.createSettingsControl(mainSettingsDiv, generalSettingsDiv);
+    bonkHUD.createSettingsControl(styleSettingsDiv, generalSettingsDiv);
+    bonkHUD.createMenuHeader("General", generalSettingsDiv);
+
+    let ind = bonkHUD.settingsHold.length;
+    bonkHUD.settingsHold.push("bonkhud-main-mod-setting");
+    let settings = { hideAds: false, opacity: "1"};
+    let tempSettings = bonkHUD.getModSetting(ind);
+    if (tempSettings != null) {
+        settings = tempSettings;
+        // Could bring into one function then call it
+        mainSettingsAdHide.checked = settings.hideAds;
+        let ad1 = window.top.document.getElementById('adboxverticalCurse');
+        let ad2 = window.top.document.getElementById('adboxverticalleftCurse');
+        if (settings.hideAds) {
+            ad1.style.display = "none";
+            ad2.style.display = "none";
+        } else {
+            ad1.style.display = "block";
+            ad2.style.display = "block";
+        }
+
+        opacitySlider.value = settings.opacity;
+        settingsMenu.style.opacity = settings.opacity;
+    }
+
+    opacitySlider.oninput = function () {
+        settingsMenu.style.opacity = this.value;
+        settings.opacity = this.value;
+        bonkHUD.saveModSetting(ind, settings);
+    };
+
+    mainSettingsAdHide.oninput = function () {
+        settings.hideAds = this.checked;
+        let ad1 = window.top.document.getElementById('adboxverticalCurse');
+        let ad2 = window.top.document.getElementById('adboxverticalleftCurse');
+        if (settings.hideAds) {
+            ad1.style.display = "none";
+            ad2.style.display = "none";
+        } else {
+            ad1.style.display = "block";
+            ad2.style.display = "block";
+        }
+        bonkHUD.saveModSetting(ind, settings);
+    }
 
     // Make menu to control opacity + visibility visible
     closeButton.addEventListener('click', (e) => {

@@ -1,18 +1,47 @@
 //@Main{Preload}
 
-bonkHUD.createWindowControl = function (name, recVersion, ind, settingsElement = 0) {
+bonkHUD.createMenuHeader = function (name, settingsContent, recVersion = -1) {
     // Create container for the opacity controls with initial styles
-    let sliderRow = document.createElement("div");
-    sliderRow.classList.add("bonkhud-settings-row");
-    sliderRow.classList.add("bonkhud-border-color");
+    let sliderRow = bonkHUD.generateSection();
 
     // Add a title to the slider row for visual clarity
     let sliderTitle = document.createElement("div");
-    sliderTitle.textContent = name + " ("+recVersion+")";
+    if (recVersion === -1) {
+        sliderTitle.textContent = name;
+    } else {
+        sliderTitle.textContent = name + " ("+recVersion+")";
+    }
     sliderTitle.style.marginBottom = "5px";
     sliderTitle.style.fontSize = "1.2rem"; // Text size for readability
     sliderTitle.style.fontWeight = "bold"; // Make the title text bold
     sliderRow.appendChild(sliderTitle); // Insert the title into the slider container
+
+    //open settings in
+    settingsContent.prepend(sliderRow.cloneNode(true));
+    settingsContent.classList.add("bonkhud-mod-setting-menu");
+    settingsContent.style.display = "none";
+    document.getElementById("bonkhud-settings-container").appendChild(settingsContent);
+
+    sliderRow.addEventListener("click", (e) => {
+        let menus = document.getElementsByClassName("bonkhud-mod-setting-menu");
+        // Could make this without for loop but would need to store last menu
+        for (let i = 0; i < menus.length; i++) {
+            menus[i].style.display = "none";
+        }
+        settingsContent.style.display = "block";
+
+        let titles = document.getElementById("bonkhud-window-settings-container").children;
+        for (let i = 0; i < titles.length; i++) {
+            titles[i].children[0].style.color = bonkHUD.styleHold.textColor.color;
+        }
+        sliderTitle.style.color = bonkHUD.styleHold.secondaryTextColor.color;
+    });
+
+    document.getElementById("bonkhud-window-settings-container").appendChild(sliderRow);
+}
+
+bonkHUD.createWindowControl = function (ind, element) {
+    let sliderRow = bonkHUD.generateSection();
 
     let holdLeft = document.createElement("div");
     holdLeft.style.display = "flex";
@@ -37,7 +66,7 @@ bonkHUD.createWindowControl = function (name, recVersion, ind, settingsElement =
         let control = document.getElementById(bonkHUD.windowHold[ind].id + "-drag"); // Update the UI opacity in real-time;
         control.style.opacity = this.value;
         bonkHUD.windowHold[ind].opacity = control.style.opacity;
-        bonkHUD.saveUISetting(bonkHUD.windowHold[ind].id);
+        bonkHUD.saveUISetting(ind);
     };
     holdLeft.appendChild(opacitySlider); // Place the slider into the slider container
 
@@ -65,7 +94,7 @@ bonkHUD.createWindowControl = function (name, recVersion, ind, settingsElement =
         let control = document.getElementById(bonkHUD.windowHold[ind].id + "-drag"); // Update the UI opacity in real-time;
         control.style.display = this.checked ? "block" : "none";
         bonkHUD.windowHold[ind].display = control.style.display;
-        bonkHUD.saveUISetting(bonkHUD.windowHold[ind].id);
+        bonkHUD.saveUISetting(ind);
     };
     holdRight.appendChild(visiblityCheck); // Place the slider into the slider container
 
@@ -74,20 +103,16 @@ bonkHUD.createWindowControl = function (name, recVersion, ind, settingsElement =
     windowResetButton.style.paddingRight = "5px";
     windowResetButton.style.display = "inline-block";
     windowResetButton.addEventListener('click', (e) => {
-        bonkHUD.resetUISetting(bonkHUD.windowHold[ind].id);
-        bonkHUD.loadUISetting(bonkHUD.windowHold[ind].id);
+        bonkHUD.resetUISetting(ind);
+        bonkHUD.loadUISetting(ind);
     });
 
     sliderRow.appendChild(holdLeft);
     sliderRow.appendChild(holdRight);
     sliderRow.appendChild(windowResetButton);
 
-    //! may instead make it so when sliderrow is focused, the
-    //! seetings appear on the big settings menu
-    if(settingsElement !== 0 && settingsElement instanceof Node)
-        sliderRow.appendChild(settingsElement);
-
-    return sliderRow; // Return the fully constructed slider row element
+    element.appendChild(sliderRow);
+    //bonkHUD.settingsHold[ind].settings.appendChild(sliderRow);
 };
 
 bonkHUD.focusWindow = function (focusItem) {

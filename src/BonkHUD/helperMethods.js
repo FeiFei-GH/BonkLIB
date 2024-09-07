@@ -1,5 +1,6 @@
 //@Main{Preload}
 
+//! Eventually change ID to Id
 bonkHUD.getWindowIndexByID = function (id) {
     for (let i = 0; i < bonkHUD.windowHold.length; i++) {
         if (bonkHUD.windowHold[i].id == id) {
@@ -8,6 +9,14 @@ bonkHUD.getWindowIndexByID = function (id) {
     }
     return -1;
 };
+
+bonkHUD.getWindowIdByIndex = function (ind) {
+    return bonkHUD.windowHold[ind].id
+}
+
+bonkHUD.getElementByIndex = function (ind) {
+    return document.getElementById(bonkHUD.windowHold[ind].id)
+}
 
 bonkHUD.clamp = function (val, min, max) {
     //? supposedly faster than Math.max/min

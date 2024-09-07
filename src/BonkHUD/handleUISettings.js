@@ -1,17 +1,16 @@
 //@Main{Preload}
 
-bonkHUD.saveUISetting = function (id) {
-    let ind = bonkHUD.getWindowIndexByID(id);
-    let save_id = 'bonkHUD_Setting_' + id;
+bonkHUD.saveUISetting = function (ind) {
+    let save_id = 'bonkHUD_Setting_' + bonkHUD.windowHold[ind].id;
     localStorage.setItem(save_id, JSON.stringify(bonkHUD.windowHold[ind]));
 };
 
-bonkHUD.getUISetting = function (id) {
-    let save_id = 'bonkHUD_Setting_' + id;
+bonkHUD.getUISetting = function (ind) {
+    let save_id = 'bonkHUD_Setting_' + bonkHUD.windowHold[ind].id;
     let setting = JSON.parse(localStorage.getItem(save_id));
     if (!setting) {
         setting = {
-            id: id,
+            id: bonkHUD.windowHold[ind].id,
             width: "154px",
             height: "100px",
             bottom: "0rem",
@@ -23,22 +22,22 @@ bonkHUD.getUISetting = function (id) {
     return setting;
 };
 
-bonkHUD.loadUISetting = function (id) {
-    let windowElement = document.getElementById(id + "-drag");
+bonkHUD.loadUISetting = function (ind) {
+    let windowElement = document.getElementById(bonkHUD.windowHold[ind].id + "-drag");
     if (windowElement) {
-        Object.assign(windowElement.style, bonkHUD.getUISetting(id));
+        Object.assign(windowElement.style, bonkHUD.getUISetting(ind));
     } else {
-        console.log(`bonkHUD.loadUISetting: Window element not found for id: ${id}. Please ensure the window has been created.`);
+        console.log(`bonkHUD.loadUISetting: Window element not found for id: ${bonkHUD.windowHold[ind].id}. Please ensure the window has been created.`);
     }
 };
 
-bonkHUD.resetUISetting = function (id) {
-    let windowElement = document.getElementById(id + "-drag");
+bonkHUD.resetUISetting = function (ind) {
+    let windowElement = document.getElementById(bonkHUD.windowHold[ind].id + "-drag");
     if (windowElement) {
-        let save_id = 'bonkHUD_Setting_' + id;
+        let save_id = 'bonkHUD_Setting_' + bonkHUD.windowHold[ind].id;
         localStorage.removeItem(save_id);
-        Object.assign(windowElement.style, bonkHUD.getUISetting(id));
+        Object.assign(windowElement.style, bonkHUD.getUISetting(ind));
     } else {
-        console.log(`bonkHUD.resetUISetting: Window element not found for id: ${id}. Please ensure the window has been created.`);
+        console.log(`bonkHUD.resetUISetting: Window element not found for id: ${bonkHUD.windowHold[ind].id}. Please ensure the window has been created.`);
     }
 };
