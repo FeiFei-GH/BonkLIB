@@ -22,8 +22,7 @@ bonkAPI.banPlayerByID = function (id, kick = false) {
 /**
  * Gets all online friends.
  * @function getOnlineFriendList
- * @param {function} callback - Callback function
- * @returns {Array.<Friend>} Array of {@linkcode Friend} objects
+ * @param {function(Array.<Friend>)} callback - Callback function with parameter of an array of {@linkcode Friend} objects
  */
 bonkAPI.getOnlineFriendList = function (callback) {
     let req = new window.XMLHttpRequest();
