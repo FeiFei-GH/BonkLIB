@@ -32,6 +32,7 @@ bonkAPI.send_Inputs = function (args) {
 /**
  * Called when started the game.
  * @function send_GameStart
+ * @fires gameStart
  * @param {JSON} args - Packet received by websocket.
  * @returns {JSON} arguements
  */
