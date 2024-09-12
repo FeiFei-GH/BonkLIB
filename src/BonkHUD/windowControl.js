@@ -14,6 +14,7 @@ bonkHUD.createMenuHeader = function (name, settingsContent, recVersion = -1) {
     sliderTitle.style.marginBottom = "5px";
     sliderTitle.style.fontSize = "1.2rem"; // Text size for readability
     sliderTitle.style.fontWeight = "bold"; // Make the title text bold
+    sliderTitle.classList.add("bonkhud-text-color");
     sliderRow.appendChild(sliderTitle); // Insert the title into the slider container
 
     //open settings in
@@ -33,8 +34,12 @@ bonkHUD.createMenuHeader = function (name, settingsContent, recVersion = -1) {
         let titles = document.getElementById("bonkhud-window-settings-container").children;
         for (let i = 0; i < titles.length; i++) {
             titles[i].children[0].style.color = bonkHUD.styleHold.textColor.color;
+            titles[i].children[0].classList.add("bonkhud-text-color");
+            titles[i].children[0].classList.remove("bonkhud-secondary-text-color");
         }
         sliderTitle.style.color = bonkHUD.styleHold.secondaryTextColor.color;
+        sliderTitle.classList.remove("bonkhud-text-color");
+        sliderTitle.classList.add("bonkhud-secondary-text-color");
     });
 
     document.getElementById("bonkhud-window-settings-container").appendChild(sliderRow);

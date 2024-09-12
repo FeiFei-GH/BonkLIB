@@ -5,9 +5,9 @@ bonkHUD.saveStyleSettings = function () {
 };
 
 bonkHUD.exportStyleSettings = function() {
-    let exportStyleHold = [];
+    let exportStyleHold = {};
     for(let prop in bonkHUD.styleHold) {
-        exportStyleHold.push(bonkHUD.styleHold[prop].color);
+        exportStyleHold[prop] = bonkHUD.styleHold[prop].color
     }
     let out = JSON.stringify(exportStyleHold);
     let save = new File([out], "bonkHUDStyle-" + Date.now() + ".style", {type: 'text/plain',});
@@ -32,17 +32,16 @@ bonkHUD.importStyleSettings = function(event) {
         let tempStyleHold = {};
         try {
             let temp = JSON.parse(e.target.result);
-            let i = 0;
             for(let prop in bonkHUD.styleHold) {
                 tempStyleHold[prop] = {};
                 tempStyleHold[prop].class = bonkHUD.styleHold[prop].class;
                 tempStyleHold[prop].css = bonkHUD.styleHold[prop].css;
-                if(typeof temp[i] == "string" && temp[i].charAt(0) === "#" && !isNaN(Number("0x" + temp[i].substring(1, 7)))) {
-                    tempStyleHold[prop].color = temp[i];
+                if(typeof temp[prop] == "string" && temp[prop].charAt(0) === "#" && !isNaN(Number("0x" + temp[prop].substring(1, 7)))) {
+                    tempStyleHold[prop].color = temp[prop];
                 } else {
-                    throw new Error("Incorrect style input");
+                    tempStyleHold[prop].color = bonkHUD.styleHold[prop].color;
+                    //throw new Error("Incorrect style input");
                 }
-                i++;
             }
             bonkHUD.loadStyleSettings(tempStyleHold);
             bonkHUD.updateStyleSettings();
