@@ -14,7 +14,7 @@ window.WebSocket.prototype.send = function (args) {
                     newArgs = JSON.parse(args.data.substring(2));
                     // !All function names follow verb_noun[verb] format
                     switch (parseInt(newArgs[0])) {
-                        case 1: //*Update other players' pings
+                        case 1: // *Update other players' pings
                             newArgs = bonkAPI.receive_PingUpdate(newArgs);
                             break;
                         case 2: // *UNKNOWN, received after sending create room packet
