@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         BonkLIB
-// @version      1.1.3
+// @version      1.1.4
 // @author       FeiFei + Clarifi + BoZhi
 // @namespace    https://github.com/FeiFei-GH/BonkLIB
 // @description  BonkAPI + BonkHUD
@@ -16,7 +16,7 @@ https://greasyfork.org/en/scripts/433861-code-injector-bonk-io
 
 // ! Compitable with Bonk Version 49
 window.bonkLIB = {};
-bonkLIB.version = "1.1.3";
+bonkLIB.version = "1.1.4";
 
 window.bonkAPI = {};
 
@@ -156,8 +156,7 @@ bonkAPI.banPlayerByID = function (id, kick = false) {
 /**
  * Gets all online friends.
  * @function getOnlineFriendList
- * @param {function} callback - Callback function
- * @returns {Array.<Friend>} Array of {@linkcode Friend} objects
+ * @param {function(Array.<Friend>)} callback - Callback function with parameter of an array of {@linkcode Friend} objects
  */
 bonkAPI.getOnlineFriendList = function (callback) {
     let req = new window.XMLHttpRequest();
@@ -1394,6 +1393,7 @@ bonkAPI.send_Inputs = function (args) {
 /**
  * Called when started the game.
  * @function send_GameStart
+ * @fires gameStart
  * @param {JSON} args - Packet received by websocket.
  * @returns {JSON} arguements
  */
@@ -2203,9 +2203,9 @@ bonkHUD.saveStyleSettings = function () {
 };
 
 bonkHUD.exportStyleSettings = function() {
-    let exportStyleHold = [];
+    let exportStyleHold = {};
     for(let prop in bonkHUD.styleHold) {
-        exportStyleHold.push(bonkHUD.styleHold[prop].color);
+        exportStyleHold[prop] = bonkHUD.styleHold[prop].color
     }
     let out = JSON.stringify(exportStyleHold);
     let save = new File([out], "bonkHUDStyle-" + Date.now() + ".style", {type: 'text/plain',});
@@ -2230,17 +2230,16 @@ bonkHUD.importStyleSettings = function(event) {
         let tempStyleHold = {};
         try {
             let temp = JSON.parse(e.target.result);
-            let i = 0;
             for(let prop in bonkHUD.styleHold) {
                 tempStyleHold[prop] = {};
                 tempStyleHold[prop].class = bonkHUD.styleHold[prop].class;
                 tempStyleHold[prop].css = bonkHUD.styleHold[prop].css;
-                if(typeof temp[i] == "string" && temp[i].charAt(0) === "#" && !isNaN(Number("0x" + temp[i].substring(1, 7)))) {
-                    tempStyleHold[prop].color = temp[i];
+                if(typeof temp[prop] == "string" && temp[prop].charAt(0) === "#" && !isNaN(Number("0x" + temp[prop].substring(1, 7)))) {
+                    tempStyleHold[prop].color = temp[prop];
                 } else {
-                    throw new Error("Incorrect style input");
+                    tempStyleHold[prop].color = bonkHUD.styleHold[prop].color;
+                    //throw new Error("Incorrect style input");
                 }
-                i++;
             }
             bonkHUD.loadStyleSettings(tempStyleHold);
             bonkHUD.updateStyleSettings();
@@ -2754,6 +2753,7 @@ bonkHUD.createMenuHeader = function (name, settingsContent, recVersion = -1) {
     sliderTitle.style.marginBottom = "5px";
     sliderTitle.style.fontSize = "1.2rem"; // Text size for readability
     sliderTitle.style.fontWeight = "bold"; // Make the title text bold
+    sliderTitle.classList.add("bonkhud-text-color");
     sliderRow.appendChild(sliderTitle); // Insert the title into the slider container
 
     //open settings in
@@ -2773,8 +2773,12 @@ bonkHUD.createMenuHeader = function (name, settingsContent, recVersion = -1) {
         let titles = document.getElementById("bonkhud-window-settings-container").children;
         for (let i = 0; i < titles.length; i++) {
             titles[i].children[0].style.color = bonkHUD.styleHold.textColor.color;
+            titles[i].children[0].classList.add("bonkhud-text-color");
+            titles[i].children[0].classList.remove("bonkhud-secondary-text-color");
         }
         sliderTitle.style.color = bonkHUD.styleHold.secondaryTextColor.color;
+        sliderTitle.classList.remove("bonkhud-text-color");
+        sliderTitle.classList.add("bonkhud-secondary-text-color");
     });
 
     document.getElementById("bonkhud-window-settings-container").appendChild(sliderRow);
