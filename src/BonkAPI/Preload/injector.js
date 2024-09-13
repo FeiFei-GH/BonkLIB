@@ -4,37 +4,23 @@
 bonkAPI.injector = function (src) {
     let newSrc = src;
 
-    //! Inject capZoneEvent fire
-    let orgCode = `K$h[9]=K$h[0][0][K$h[2][138]]()[K$h[2][115]];`;
-    let newCode = `
-        K$h[9]=K$h[0][0][K$h[2][138]]()[K$h[2][115]];
-        
-        bonkAPI_capZoneEventTry: try {
-            // Initialize
-            let inputState = z0M[0][0];
-            let currentFrame = inputState.rl;
-            let playerID = K$h[0][0].m_userData.arrayID;
-            let capID = K$h[1];
-            
-            let sendObj = { capID: capID, playerID: playerID, currentFrame: currentFrame };
-            
-            if (window.bonkAPI.events.hasEvent["capZoneEvent"]) {
-                window.bonkAPI.events.fireEvent("capZoneEvent", sendObj);
-            }
-        } catch(err) {
-            console.error("ERROR: capZoneEvent");
-            console.error(err);
-        }`;
-
-    newSrc = newSrc.replace(orgCode, newCode);
-
     //! Inject stepEvent fire
-    orgCode = `return z0M[720];`;
-    newCode = `
+    // The semicolon disappeared during the April 2024 update
+    /*
+     * orgCode[0] is the entire match
+     * orgCode[1] is the game state
+     * orgCode[2] is the most top level variable in the step function
+     */
+    let orgCode = src.match(/if\([a-zA-Z0-9\$_]{3}\[[0-9]+\] > 10\){;?}return (([a-zA-Z0-9\$_]{3})\[[0-9]+\]);/);
+
+    // This can be used to access step arguments in the scope of the step function
+    const globalStepVariable = orgCode[2];
+
+    let newCode = `
         bonkAPI_stepEventTry: try {
-            let inputStateClone = JSON.parse(JSON.stringify(z0M[0][0]));
+            let inputStateClone = JSON.parse(JSON.stringify(${globalStepVariable}[0][0]));
             let currentFrame = inputStateClone.rl;
-            let gameStateClone = JSON.parse(JSON.stringify(z0M[720]));
+            let gameStateClone = structuredClone(${orgCode[1]});
             
             let sendObj = { inputState: inputStateClone, gameState: gameStateClone, currentFrame: currentFrame };
             
@@ -45,8 +31,32 @@ bonkAPI.injector = function (src) {
             console.error("ERROR: stepEvent");
             console.error(err);
         }
-        
-        return z0M[720];`;
+
+        ${orgCode[0]}`;
+
+    newSrc = newSrc.replace(orgCode[0], newCode);
+
+    //! Inject capZoneEvent fire
+    orgCode = src.match(/if[^;]+?{count:1,players:/)[0];
+    newCode = `
+        bonkAPI_capZoneEventTry: try {
+            // Initialize
+            let inputState = ${globalStepVariable}[0][0];
+            let currentFrame = inputState.rl;
+            let playerID = arguments[0].GetUserData().arrayID;
+            let capID = arguments[1].GetUserData().capID;
+            
+            let sendObj = { capID: capID, playerID: playerID, currentFrame: currentFrame };
+            
+            if (window.bonkAPI.events.hasEvent["capZoneEvent"]) {
+                window.bonkAPI.events.fireEvent("capZoneEvent", sendObj);
+            }
+        } catch(err) {
+            console.error("ERROR: capZoneEvent");
+            console.error(err);
+        }
+
+        ${orgCode}`;
 
     newSrc = newSrc.replace(orgCode, newCode);
 
