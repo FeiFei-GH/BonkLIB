@@ -259,7 +259,7 @@ bonkHUD.initialize = function () {
     // Add settings
     bonkHUD.createSettingsControl(mainSettingsDiv, generalSettingsDiv);
     bonkHUD.createSettingsControl(styleSettingsDiv, generalSettingsDiv);
-    bonkHUD.createMenuHeader("General", generalSettingsDiv);
+    bonkHUD.createMenuHeader("General", generalSettingsDiv, bonkLIB.version);
 
     let ind = bonkHUD.settingsHold.length;
     bonkHUD.settingsHold.push("bonkhud-main-mod-setting");
