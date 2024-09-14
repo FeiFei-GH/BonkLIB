@@ -1,6 +1,6 @@
 {
     "source": {
-        "include": ["BonkAPI/BonkAPI.js", "README.md", "package.json"]
+        "include": ["src/", "README.md", "package.json"]
     },
 
     "opts": {
