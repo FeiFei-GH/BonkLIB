@@ -1,36 +1,11 @@
 //@Main{Load}
 
-window.PIXI.Container.prototype.addChild = function(...args) {
-    if(!this.containerHasAdded) {
-        this.containerHasAdded = true;
-        let possibleStage = this;
-        while(possibleStage.parent != null) {
-            possibleStage = possibleStage.parent;
-        }
-        bonkAPI.pixiStage = possibleStage;
-    }
-    //? you can do other stuff here probably like find specific objects
-    bonkAPI.pixiAddChild.call(this, ...args);
-};
+window.PIXI.Application = ApplicationWrapper;
 
-/*window.PIXI.Graphics.prototype.drawShape = function(...args) {
-    //! testing whether cap can be easily found in drawShape
-    //! in drawCircle, capzone has attribute 'cap: "bet"' inside fill_outline
-    //console.log([...args]);
-    let draw = this;
-    setTimeout(function(){
-        if(draw.parent) {
-            bonkAPI.parentDraw = draw.parent;
-            while(bonkAPI.parentDraw.parent != null) {
-                bonkAPI.parentDraw = bonkAPI.parentDraw.parent;
-            }
-        }
-    }, 0);
-    return bonkAPI.originalDrawShape.call(this, ...args);
-}*/
 window.requestAnimationFrame = function(...args) {
     //console.log(bonkAPI.isInGame());
     if(bonkAPI.isInGame()) {
+        //! can be replaced with renderer
         let canv = 0;
         for(let i = 0; i < document.getElementById("gamerenderer").children.length; i++) {
             if(document.getElementById("gamerenderer").children[i].constructor.name == "HTMLCanvasElement"){

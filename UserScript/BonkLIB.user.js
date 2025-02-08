@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         BonkLIB
-// @version      1.1.3
+// @version      1.1.4
 // @author       FeiFei + Clarifi + BoZhi
 // @namespace    https://github.com/FeiFei-GH/BonkLIB
 // @description  BonkAPI + BonkHUD
@@ -16,7 +16,7 @@ https://greasyfork.org/en/scripts/433861-code-injector-bonk-io
 
 // ! Compitable with Bonk Version 49
 window.bonkLIB = {};
-bonkLIB.version = "1.1.3";
+bonkLIB.version = "1.1.4";
 
 window.bonkAPI = {};
 
@@ -55,11 +55,9 @@ bonkAPI.isLoggingIn = false;
 bonkAPI.bonkWSS = 0;
 bonkAPI.originalSend = window.WebSocket.prototype.send;
 bonkAPI.originalRequestAnimationFrame = window.requestAnimationFrame;
-bonkAPI.originalDrawShape = 0;
-bonkAPI.pixiAddChild = 0;
 bonkAPI.pixiCtx = 0;
 bonkAPI.pixiStage = 0;
-bonkAPI.parentDraw = 0;
+bonkAPI.pixiRenderer = 0;
 bonkAPI.originalXMLOpen = window.XMLHttpRequest.prototype.open;
 bonkAPI.originalXMLSend = window.XMLHttpRequest.prototype.send;
 window.bonkHUD = {};
@@ -2878,9 +2876,8 @@ bonkHUD.focusWindow = function (focusItem) {
 
 //!------------------Load Complete Detection------------------
 bonkLIB.onLoaded = () => {
-bonkAPI.pixiAddChild = window.PIXI.Container.prototype.addChild;
-bonkAPI.originalDrawShape = window.PIXI.Graphics.prototype.drawShape;
 bonkAPI.pixiCtx = new window.PIXI.Container();
+bonkAPI.pixiApplication = window.PIXI.Application;
 
 // !Map Decoder
 bonkAPI.LZString = window.LZString;
@@ -3733,37 +3730,52 @@ bonkAPI.decodeMap = function (map) {
     }
     return map;
 };
-window.PIXI.Container.prototype.addChild = function(...args) {
-    if(!this.containerHasAdded) {
-        this.containerHasAdded = true;
-        let possibleStage = this;
-        while(possibleStage.parent != null) {
-            possibleStage = possibleStage.parent;
-        }
-        bonkAPI.pixiStage = possibleStage;
+class ApplicationWrapper {
+    constructor(options, arg2, arg3, arg4, arg5) {
+        this.application = new bonkAPI.pixiApplication(options, arg2, arg3, arg4, arg5);
+        console.log("Created Application");
+        bonkAPI.pixiStage = this.application.stage;
+        bonkAPI.pixiRenderer = this.application.renderer;
     }
-    //? you can do other stuff here probably like find specific objects
-    bonkAPI.pixiAddChild.call(this, ...args);
-};
 
-/*window.PIXI.Graphics.prototype.drawShape = function(...args) {
-    //! testing whether cap can be easily found in drawShape
-    //! in drawCircle, capzone has attribute 'cap: "bet"' inside fill_outline
-    //console.log([...args]);
-    let draw = this;
-    setTimeout(function(){
-        if(draw.parent) {
-            bonkAPI.parentDraw = draw.parent;
-            while(bonkAPI.parentDraw.parent != null) {
-                bonkAPI.parentDraw = bonkAPI.parentDraw.parent;
-            }
-        }
-    }, 0);
-    return bonkAPI.originalDrawShape.call(this, ...args);
-}*/
+    set ticker(newTicker) {
+        this.application.ticker = newTicker;
+    }
+    get ticker() {
+        return this.application.ticker;
+    }
+
+    render() {
+        this.application.render();
+    }
+
+    stop() {
+        this.application.stop();
+    }
+
+    start() {
+        this.application.start();
+    }
+
+    get view() {
+        return this.application.view;
+    }
+
+    get screen() {
+        return this.application.screen;
+    }
+
+    destroy(removeView, stageOptions) {
+        this.application.destroy(removeView, stageOptions);
+        this.application = null;
+    }
+}
+window.PIXI.Application = ApplicationWrapper;
+
 window.requestAnimationFrame = function(...args) {
     //console.log(bonkAPI.isInGame());
     if(bonkAPI.isInGame()) {
+        //! can be replaced with renderer
         let canv = 0;
         for(let i = 0; i < document.getElementById("gamerenderer").children.length; i++) {
             if(document.getElementById("gamerenderer").children[i].constructor.name == "HTMLCanvasElement"){
