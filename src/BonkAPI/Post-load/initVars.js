@@ -1,4 +1,5 @@
 //@Variables{Load}
+bonkAPI.pixiAddChild = window.PIXI.Container.prototype.addChild;
 bonkAPI.originalDrawShape = window.PIXI.Graphics.prototype.drawShape;
 bonkAPI.pixiCtx = new window.PIXI.Container();
 

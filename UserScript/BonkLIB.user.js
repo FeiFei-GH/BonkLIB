@@ -56,6 +56,7 @@ bonkAPI.bonkWSS = 0;
 bonkAPI.originalSend = window.WebSocket.prototype.send;
 bonkAPI.originalRequestAnimationFrame = window.requestAnimationFrame;
 bonkAPI.originalDrawShape = 0;
+bonkAPI.pixiAddChild = 0;
 bonkAPI.pixiCtx = 0;
 bonkAPI.pixiStage = 0;
 bonkAPI.parentDraw = 0;
@@ -402,7 +403,7 @@ window.WebSocket.prototype.send = function (args) {
                     newArgs = JSON.parse(args.data.substring(2));
                     // !All function names follow verb_noun[verb] format
                     switch (parseInt(newArgs[0])) {
-                        case 1: //*Update other players' pings
+                        case 1: // *Update other players' pings
                             newArgs = bonkAPI.receive_PingUpdate(newArgs);
                             break;
                         case 2: // *UNKNOWN, received after sending create room packet
@@ -1747,37 +1748,23 @@ window.XMLHttpRequest.prototype.send = function (data) {
 bonkAPI.injector = function (src) {
     let newSrc = src;
 
-    //! Inject capZoneEvent fire
-    let orgCode = `K$h[9]=K$h[0][0][K$h[2][138]]()[K$h[2][115]];`;
-    let newCode = `
-        K$h[9]=K$h[0][0][K$h[2][138]]()[K$h[2][115]];
-        
-        bonkAPI_capZoneEventTry: try {
-            // Initialize
-            let inputState = z0M[0][0];
-            let currentFrame = inputState.rl;
-            let playerID = K$h[0][0].m_userData.arrayID;
-            let capID = K$h[1];
-            
-            let sendObj = { capID: capID, playerID: playerID, currentFrame: currentFrame };
-            
-            if (window.bonkAPI.events.hasEvent["capZoneEvent"]) {
-                window.bonkAPI.events.fireEvent("capZoneEvent", sendObj);
-            }
-        } catch(err) {
-            console.error("ERROR: capZoneEvent");
-            console.error(err);
-        }`;
-
-    newSrc = newSrc.replace(orgCode, newCode);
-
     //! Inject stepEvent fire
-    orgCode = `return z0M[720];`;
-    newCode = `
+    // The semicolon disappeared during the April 2024 update
+    /*
+     * orgCode[0] is the entire match
+     * orgCode[1] is the game state
+     * orgCode[2] is the most top level variable in the step function
+     */
+    let orgCode = src.match(/if\([a-zA-Z0-9\$_]{3}\[[0-9]+\] > 10\){;?}return (([a-zA-Z0-9\$_]{3})\[[0-9]+\]);/);
+
+    // This can be used to access step arguments in the scope of the step function
+    const globalStepVariable = orgCode[2];
+
+    let newCode = `
         bonkAPI_stepEventTry: try {
-            let inputStateClone = JSON.parse(JSON.stringify(z0M[0][0]));
+            let inputStateClone = JSON.parse(JSON.stringify(${globalStepVariable}[0][0]));
             let currentFrame = inputStateClone.rl;
-            let gameStateClone = JSON.parse(JSON.stringify(z0M[720]));
+            let gameStateClone = structuredClone(${orgCode[1]});
             
             let sendObj = { inputState: inputStateClone, gameState: gameStateClone, currentFrame: currentFrame };
             
@@ -1788,8 +1775,32 @@ bonkAPI.injector = function (src) {
             console.error("ERROR: stepEvent");
             console.error(err);
         }
-        
-        return z0M[720];`;
+
+        ${orgCode[0]}`;
+
+    newSrc = newSrc.replace(orgCode[0], newCode);
+
+    //! Inject capZoneEvent fire
+    orgCode = src.match(/if[^;]+?{count:1,players:/)[0];
+    newCode = `
+        bonkAPI_capZoneEventTry: try {
+            // Initialize
+            let inputState = ${globalStepVariable}[0][0];
+            let currentFrame = inputState.rl;
+            let playerID = arguments[0].GetUserData().arrayID;
+            let capID = arguments[1].GetUserData().capID;
+            
+            let sendObj = { capID: capID, playerID: playerID, currentFrame: currentFrame };
+            
+            if (window.bonkAPI.events.hasEvent["capZoneEvent"]) {
+                window.bonkAPI.events.fireEvent("capZoneEvent", sendObj);
+            }
+        } catch(err) {
+            console.error("ERROR: capZoneEvent");
+            console.error(err);
+        }
+
+        ${orgCode}`;
 
     newSrc = newSrc.replace(orgCode, newCode);
 
@@ -1849,7 +1860,7 @@ bonkAPI.receivePacket = function (packet) {
     }
 };
 bonkHUD.createWindow = function (windowName, windowContent, opts = {}) {
-    //* leaving this for backwards compatability fr
+    // *leaving this for backwards compatability fr
     let id = "bonkHUD_window_" + windowName; 
     let modVersion = "1.0.0";
     if(opts.hasOwnProperty("windowId")) {
@@ -2867,6 +2878,7 @@ bonkHUD.focusWindow = function (focusItem) {
 
 //!------------------Load Complete Detection------------------
 bonkLIB.onLoaded = () => {
+bonkAPI.pixiAddChild = window.PIXI.Container.prototype.addChild;
 bonkAPI.originalDrawShape = window.PIXI.Graphics.prototype.drawShape;
 bonkAPI.pixiCtx = new window.PIXI.Container();
 
@@ -3721,7 +3733,20 @@ bonkAPI.decodeMap = function (map) {
     }
     return map;
 };
-window.PIXI.Graphics.prototype.drawShape = function(...args) {
+window.PIXI.Container.prototype.addChild = function(...args) {
+    if(!this.containerHasAdded) {
+        this.containerHasAdded = true;
+        let possibleStage = this;
+        while(possibleStage.parent != null) {
+            possibleStage = possibleStage.parent;
+        }
+        bonkAPI.pixiStage = possibleStage;
+    }
+    //? you can do other stuff here probably like find specific objects
+    bonkAPI.pixiAddChild.call(this, ...args);
+};
+
+/*window.PIXI.Graphics.prototype.drawShape = function(...args) {
     //! testing whether cap can be easily found in drawShape
     //! in drawCircle, capzone has attribute 'cap: "bet"' inside fill_outline
     //console.log([...args]);
@@ -3735,7 +3760,7 @@ window.PIXI.Graphics.prototype.drawShape = function(...args) {
         }
     }, 0);
     return bonkAPI.originalDrawShape.call(this, ...args);
-}
+}*/
 window.requestAnimationFrame = function(...args) {
     //console.log(bonkAPI.isInGame());
     if(bonkAPI.isInGame()) {
@@ -3746,64 +3771,64 @@ window.requestAnimationFrame = function(...args) {
                 break;
             }
         }
-        //console.log(bonkAPI.parentDraw);
-        if(canv != 0 && bonkAPI.parentDraw) {
-            //! might do something might not
-            while(bonkAPI.parentDraw.parent != null) {
-                bonkAPI.parentDraw = bonkAPI.parentDraw.parent;
-            }
-            /**
-             * When a new frame is rendered when in game. It is recomended
-             * to not create new graphics or clear graphics every frame if
-             * possible.
-             * @event graphicsUpdate
-             * @type {object}
-             * @property {string} container - PIXI container to hold PIXI graphics.
-             * @property {number} width - Width of main screen
-             * @property {number} height - Height of main screen
-             */
-            if(bonkAPI.events.hasEvent["graphicsUpdate"]) {
-                let w = parseInt(canv.style.width);
-                let h = parseInt(canv.style.height);
-                //bonkAPI.pixiCtx.x = w / 2;
-                //bonkAPI.pixiCtx.y = h / 2;
-                bonkAPI.pixiStage = 0;
-                for(let i = 0; i < bonkAPI.parentDraw.children.length; i++){
-                    if(bonkAPI.parentDraw.children[i].constructor.name == "e"){
-                        //console.log(bonkAPI.parentDraw);
-                        bonkAPI.pixiStage = bonkAPI.parentDraw.children[i];
-                        break;
-                    }
+        /**
+         * When a new frame is rendered when in game. It is recomended
+         * to not create new graphics or clear graphics every frame if
+         * possible.
+         * @event graphicsUpdate
+         * @type {object}
+         * @property {string} container - PIXI container to hold PIXI graphics.
+         * @property {number} width - Width of main screen
+         * @property {number} height - Height of main screen
+         */
+        if(bonkAPI.events.hasEvent["graphicsUpdate"]) {
+            let w = parseInt(canv.style.width);
+            let h = parseInt(canv.style.height);
+            //bonkAPI.pixiCtx.x = w / 2;
+            //bonkAPI.pixiCtx.y = h / 2;
+            /*bonkAPI.pixiStage = 0;
+            for(let i = 0; i < bonkAPI.parentDraw.children.length; i++){
+                if(bonkAPI.parentDraw.children[i].constructor.name == "e"){
+                    //console.log(bonkAPI.parentDraw);
+                    bonkAPI.pixiStage = bonkAPI.parentDraw.children[i];
+                    break;
                 }
-                let sendObj = {
-                    container: bonkAPI.pixiCtx,
-                    width: w,
-                    height: h,
-                };
-                bonkAPI.events.fireEvent("graphicsUpdate", sendObj);
-                if(bonkAPI.pixiStage != 0 && !bonkAPI.pixiStage.children.includes(bonkAPI.pixiCtx)) {
-                    bonkAPI.pixiStage.addChild(bonkAPI.pixiCtx);
-                }
+            }*/
+            let sendObj = {
+                container: bonkAPI.pixiCtx,
+                width: w,
+                height: h,
+            };
+            bonkAPI.events.fireEvent("graphicsUpdate", sendObj);
+            if(bonkAPI.pixiStage != 0 && !bonkAPI.pixiStage.children.includes(bonkAPI.pixiCtx)) {
+                bonkAPI.pixiStage.addChild(bonkAPI.pixiCtx);
             }
         }
     }
     return bonkAPI.originalRequestAnimationFrame.call(this,...args);
 }
 
-/**
- * When the map has changed.
- * @event mapSwitch
- * @type {object}
- * @property {PIXI} pixi - PIXI class in order to create graphics and containers.
- * @property {string} container - PIXI container to hold PIXI graphics.
- */
-if(bonkAPI.events.hasEvent["graphicsReady"]) {
-    let sendObj = {
-        pixi: window.PIXI,
-        container: bonkAPI.pixiCtx,
+let intervalCount = 10;
+let clearId = setInterval (() => {
+    /**
+     * When PIXI graphics are ready to be read from, will fire more than once
+     * @event graphicsReady
+     * @type {object}
+     * @property {PIXI} pixi - PIXI class in order to create graphics and containers.
+     * @property {string} container - PIXI container to hold PIXI graphics.
+     */
+    if(bonkAPI.events.hasEvent["graphicsReady"]) {
+        let sendObj = {
+            pixi: window.PIXI,
+            container: bonkAPI.pixiCtx,
+        }
+        bonkAPI.events.fireEvent("graphicsReady", sendObj);
     }
-    bonkAPI.events.fireEvent("graphicsReady", sendObj);
-}
+    if(--intervalCount == 0) {
+        clearInterval(clearId);
+    }
+}, 500);
+
 bonkHUD.loadStyleSettings();
 bonkHUD.initialize();
 bonkHUD.updateStyleSettings();

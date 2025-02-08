@@ -37,6 +37,7 @@ bonkAPI.bonkWSS = 0;
 bonkAPI.originalSend = window.WebSocket.prototype.send;
 bonkAPI.originalRequestAnimationFrame = window.requestAnimationFrame;
 bonkAPI.originalDrawShape = 0;
+bonkAPI.pixiAddChild = 0;
 bonkAPI.pixiCtx = 0;
 bonkAPI.pixiStage = 0;
 bonkAPI.parentDraw = 0;
