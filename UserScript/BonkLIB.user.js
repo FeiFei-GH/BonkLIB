@@ -18,6 +18,7 @@ https://greasyfork.org/en/scripts/433861-code-injector-bonk-io
 window.bonkLIB = {};
 bonkLIB.version = "1.1.3";
 
+
 window.bonkAPI = {};
 
 /**
@@ -61,6 +62,7 @@ bonkAPI.pixiStage = 0;
 bonkAPI.parentDraw = 0;
 bonkAPI.originalXMLOpen = window.XMLHttpRequest.prototype.open;
 bonkAPI.originalXMLSend = window.XMLHttpRequest.prototype.send;
+
 window.bonkHUD = {};
 
 bonkHUD.windowHold = [];
@@ -132,6 +134,7 @@ bonkHUD.bonkHUDCSS.innerHTML = `
 `;
 
 document.getElementsByTagName("head")[0].appendChild(bonkHUD.bonkHUDCSS);
+
 
 
 /**
@@ -388,6 +391,7 @@ bonkAPI.isInGame = function () {
     let renderer = document.getElementById("gamerenderer");
     return renderer.style.visibility == "inherit";
 }
+
 window.WebSocket.prototype.send = function (args) {
     if (this.url.includes("socket.io/?EIO=3&transport=websocket&sid=")) {
         if (!this.injectedAPI) {
@@ -402,7 +406,7 @@ window.WebSocket.prototype.send = function (args) {
                     newArgs = JSON.parse(args.data.substring(2));
                     // !All function names follow verb_noun[verb] format
                     switch (parseInt(newArgs[0])) {
-                        case 1: //*Update other players' pings
+                        case 1: // *Update other players' pings
                             newArgs = bonkAPI.receive_PingUpdate(newArgs);
                             break;
                         case 2: // *UNKNOWN, received after sending create room packet
@@ -628,6 +632,7 @@ window.WebSocket.prototype.send = function (args) {
 
     return bonkAPI.originalSend.call(this, args);
 };
+
 /**
  * @class EventHandler
  * @classdesc Stores functions and events and can fire events with data.
@@ -696,6 +701,7 @@ bonkAPI.EventHandler;
 
 //initialize
 bonkAPI.events = new bonkAPI.EventHandler();
+
 
 /**
  * Triggered when recieving ping updates.
@@ -1362,6 +1368,7 @@ bonkAPI.receive_RoomPassword = function (args) {
 
     return args;
 };
+
 /**
  * Called when sending inputs out.
  * @function send_Inputs
@@ -1724,6 +1731,7 @@ bonkAPI.send_NoHostSwap = function (args) {
 
     return args;
 };
+
 window.XMLHttpRequest.prototype.open = function (_, url) {
     if (url.includes("scripts/login_legacy")) {
         bonkAPI.isLoggingIn = true;
@@ -1743,41 +1751,28 @@ window.XMLHttpRequest.prototype.send = function (data) {
     }
     bonkAPI.originalXMLSend.call(this, ...arguments);
 };
+
 // *Injecting code into src
 bonkAPI.injector = function (src) {
     let newSrc = src;
 
-    //! Inject capZoneEvent fire
-    let orgCode = `K$h[9]=K$h[0][0][K$h[2][138]]()[K$h[2][115]];`;
-    let newCode = `
-        K$h[9]=K$h[0][0][K$h[2][138]]()[K$h[2][115]];
-        
-        bonkAPI_capZoneEventTry: try {
-            // Initialize
-            let inputState = z0M[0][0];
-            let currentFrame = inputState.rl;
-            let playerID = K$h[0][0].m_userData.arrayID;
-            let capID = K$h[1];
-            
-            let sendObj = { capID: capID, playerID: playerID, currentFrame: currentFrame };
-            
-            if (window.bonkAPI.events.hasEvent["capZoneEvent"]) {
-                window.bonkAPI.events.fireEvent("capZoneEvent", sendObj);
-            }
-        } catch(err) {
-            console.error("ERROR: capZoneEvent");
-            console.error(err);
-        }`;
-
-    newSrc = newSrc.replace(orgCode, newCode);
-
     //! Inject stepEvent fire
-    orgCode = `return z0M[720];`;
-    newCode = `
+    // The semicolon disappeared during the April 2024 update
+    /*
+     * orgCode[0] is the entire match
+     * orgCode[1] is the game state
+     * orgCode[2] is the most top level variable in the step function
+     */
+    let orgCode = src.match(/if\([a-zA-Z0-9\$_]{3}\[[0-9]+\] > 10\){;?}return (([a-zA-Z0-9\$_]{3})\[[0-9]+\]);/);
+
+    // This can be used to access step arguments in the scope of the step function
+    const globalStepVariable = orgCode[2];
+
+    let newCode = `
         bonkAPI_stepEventTry: try {
-            let inputStateClone = JSON.parse(JSON.stringify(z0M[0][0]));
+            let inputStateClone = JSON.parse(JSON.stringify(${globalStepVariable}[0][0]));
             let currentFrame = inputStateClone.rl;
-            let gameStateClone = JSON.parse(JSON.stringify(z0M[720]));
+            let gameStateClone = structuredClone(${orgCode[1]});
             
             let sendObj = { inputState: inputStateClone, gameState: gameStateClone, currentFrame: currentFrame };
             
@@ -1788,8 +1783,32 @@ bonkAPI.injector = function (src) {
             console.error("ERROR: stepEvent");
             console.error(err);
         }
-        
-        return z0M[720];`;
+
+        ${orgCode[0]}`;
+
+    newSrc = newSrc.replace(orgCode[0], newCode);
+
+    //! Inject capZoneEvent fire
+    orgCode = src.match(/if[^;]+?{count:1,players:/)[0];
+    newCode = `
+        bonkAPI_capZoneEventTry: try {
+            // Initialize
+            let inputState = ${globalStepVariable}[0][0];
+            let currentFrame = inputState.rl;
+            let playerID = arguments[0].GetUserData().arrayID;
+            let capID = arguments[1].GetUserData().capID;
+            
+            let sendObj = { capID: capID, playerID: playerID, currentFrame: currentFrame };
+            
+            if (window.bonkAPI.events.hasEvent["capZoneEvent"]) {
+                window.bonkAPI.events.fireEvent("capZoneEvent", sendObj);
+            }
+        } catch(err) {
+            console.error("ERROR: capZoneEvent");
+            console.error(err);
+        }
+
+        ${orgCode}`;
 
     newSrc = newSrc.replace(orgCode, newCode);
 
@@ -1824,6 +1843,7 @@ window.bonkCodeInjectors.push((bonkCode) => {
         throw error;
     }
 });
+
 // TODO: these could be dangerous, maybe add some sanitization
 // *Send a packet to server
 /**
@@ -1848,8 +1868,9 @@ bonkAPI.receivePacket = function (packet) {
         bonkAPI.bonkWSS.onmessage({ data: packet });
     }
 };
+
 bonkHUD.createWindow = function (windowName, windowContent, opts = {}) {
-    //* leaving this for backwards compatability fr
+    // *leaving this for backwards compatability fr
     let id = "bonkHUD_window_" + windowName; 
     let modVersion = "1.0.0";
     if(opts.hasOwnProperty("windowId")) {
@@ -2062,6 +2083,7 @@ bonkHUD.createMod = function (modName, opts = {}) {
         }
     }
 };
+
 bonkHUD.dragStart = function (e, dragItem, ind) {
     bonkHUD.focusWindow(dragItem);
     // Prevents dragging from starting on the opacity slider
@@ -2093,6 +2115,7 @@ bonkHUD.dragEnd = function (dragMoveFn, dragItem, ind) {
     bonkHUD.windowHold[ind].right = dragItem.style.right;
     bonkHUD.saveUISetting(ind);
 };
+
 // !Right now only useful for mods that have a setting that **only**
 // !needs to be read from 
 
@@ -2134,6 +2157,7 @@ bonkHUD.createSettingsControl = function (settingsElement, element) {
     element.appendChild(settingsElement)
     //bonkHUD.settingsHold[ind].settings.appendChild(settingsElement);
 };
+
 // Function to start resizing the UI
 bonkHUD.startResizing = function (e, dragItem, dir, ind) {
     e.stopPropagation(); // Prevent triggering dragStart for dragItem
@@ -2198,6 +2222,7 @@ bonkHUD.resizeEnd = function (resizeMoveFn, dragItem, ind) {
     bonkHUD.windowHold[ind].right = dragItem.style.right;
     bonkHUD.saveUISetting(ind);
 };
+
 bonkHUD.saveStyleSettings = function () {
     localStorage.setItem('bonkHUD_Style_Settings', JSON.stringify(bonkHUD.styleHold));
 };
@@ -2309,6 +2334,7 @@ bonkHUD.updateStyleSettings = function () {
         }
     }
 };
+
 bonkHUD.saveUISetting = function (ind) {
     let save_id = 'bonkHUD_Setting_' + bonkHUD.windowHold[ind].id;
     localStorage.setItem(save_id, JSON.stringify(bonkHUD.windowHold[ind]));
@@ -2350,6 +2376,7 @@ bonkHUD.resetUISetting = function (ind) {
         console.log(`bonkHUD.resetUISetting: Window element not found for id: ${bonkHUD.windowHold[ind].id}. Please ensure the window has been created.`);
     }
 };
+
 //! Eventually change ID to Id
 bonkHUD.getWindowIndexByID = function (id) {
     for (let i = 0; i < bonkHUD.windowHold.length; i++) {
@@ -2388,6 +2415,7 @@ bonkHUD.pxTorem = function (px) {
 bonkHUD.remTopx = function (rem) {
     return rem * parseFloat(getComputedStyle(document.documentElement).fontSize);
 };
+
 bonkHUD.generateButton = function (name) {
     let newButton = document.createElement("div");
     newButton.classList.add("bonkhud-button-color");
@@ -2413,6 +2441,7 @@ bonkHUD.generateSection = function () {
     sliderRow.classList.add("bonkhud-border-color");
     return sliderRow;
 }
+
 bonkHUD.initialize = function () {
     //bonkHUD.stylesheet = document.createElement("style");
     let settingsMenu = document.createElement("div");
@@ -2740,6 +2769,7 @@ bonkHUD.initialize = function () {
         styleImportInput.click();
     });
 };
+
 bonkHUD.createMenuHeader = function (name, settingsContent, recVersion = -1) {
     // Create container for the opacity controls with initial styles
     let sliderRow = bonkHUD.generateSection();
@@ -2867,6 +2897,7 @@ bonkHUD.focusWindow = function (focusItem) {
 
 //!------------------Load Complete Detection------------------
 bonkLIB.onLoaded = () => {
+
 bonkAPI.originalDrawShape = window.PIXI.Graphics.prototype.drawShape;
 bonkAPI.pixiCtx = new window.PIXI.Container();
 
@@ -2948,6 +2979,7 @@ bonkAPI.ISpsonpair = new window.dcodeIO.PSON.StaticPair([
     65535,
     16777215,
 ]);
+
 
 
 class bonkAPI_bytebuffer {
@@ -3097,6 +3129,7 @@ class bonkAPI_bytebuffer {
         this.index = 0;
     }
 }
+
 bonkAPI.ISdecode = function (rawdata) {
     rawdata_caseflipped = "";
     for (i = 0; i < rawdata.length; i++) {
@@ -3368,34 +3401,259 @@ bonkAPI.encodeMap = function (W2A) {
     return M3n[77];
 };
 
+bonkAPI.encodeMap = function (map) {
+    let bytebuffer = new bonkAPI_bytebuffer();
+    map.v = 15;
+    bytebuffer.writeShort(map.v);
+    bytebuffer.writeBoolean(map.s.re);
+    bytebuffer.writeBoolean(map.s.nc);
+    bytebuffer.writeShort(map.s.pq);
+    bytebuffer.writeFloat(map.s.gd);
+    bytebuffer.writeBoolean(map.s.fl);
+    bytebuffer.writeUTF(map.m.rxn);
+    bytebuffer.writeUTF(map.m.rxa);
+    bytebuffer.writeUint(map.m.rxid);
+    bytebuffer.writeShort(map.m.rxdb);
+    bytebuffer.writeUTF(map.m.n);
+    bytebuffer.writeUTF(map.m.a);
+    bytebuffer.writeUint(map.m.vu);
+    bytebuffer.writeUint(map.m.vd);
+    bytebuffer.writeShort(map.m.cr.length);
+    for (contributorId = 0; contributorId < map.m.cr.length; contributorId++) {
+        bytebuffer.writeUTF(map.m.cr[contributorId]);
+    }
+    bytebuffer.writeUTF(map.m.mo);
+    bytebuffer.writeInt(map.m.dbid);
+    bytebuffer.writeBoolean(map.m.pub);
+    bytebuffer.writeInt(map.m.dbv);
+    bytebuffer.writeShort(map.physics.ppm);
+    bytebuffer.writeShort(map.physics.bro.length);
+    for (broId = 0; broId < map.physics.bro.length; broId++) {
+        bytebuffer.writeShort(map.physics.bro[broId]);
+    }
+    bytebuffer.writeShort(map.physics.shapes.length);
+    for (let shapeId = 0; shapeId < map.physics.shapes.length; shapeId++) {
+        let shape = map.physics.shapes[shapeId];
+        if (shape.type == "bx") {
+            bytebuffer.writeShort(1);
+            bytebuffer.writeDouble(shape.w);
+            bytebuffer.writeDouble(shape.h);
+            bytebuffer.writeDouble(shape.c[0]);
+            bytebuffer.writeDouble(shape.c[1]);
+            bytebuffer.writeDouble(shape.a);
+            bytebuffer.writeBoolean(shape.sk);
+        }
+        if (shape.type == "ci") {
+            bytebuffer.writeShort(2);
+            bytebuffer.writeDouble(shape.r);
+            bytebuffer.writeDouble(shape.c[0]);
+            bytebuffer.writeDouble(shape.c[1]);
+            bytebuffer.writeBoolean(shape.sk);
+        }
+        if (shape.type == "po") {
+            bytebuffer.writeShort(3);
+            bytebuffer.writeDouble(shape.s);
+            bytebuffer.writeDouble(shape.a);
+            bytebuffer.writeDouble(shape.c[0]);
+            bytebuffer.writeDouble(shape.c[1]);
+            bytebuffer.writeShort(shape.v.length);
+            for (let verticeId = 0; verticeId < shape.v.length; verticeId++) {
+                bytebuffer.writeDouble(shape.v[verticeId][0]);
+                bytebuffer.writeDouble(shape.v[verticeId][1]);
+            }
+        }
+    }
+    bytebuffer.writeShort(map.physics.fixtures.length);
+    for (let fixtureId = 0; fixtureId < map.physics.fixtures.length; fixtureId++) {
+        let fixture = map.physics.fixtures[fixtureId];
+        bytebuffer.writeShort(fixture.sh);
+        bytebuffer.writeUTF(fixture.n);
+        if (fixture.fr === null) {
+            bytebuffer.writeDouble(Number.MAX_VALUE);
+        } else {
+            bytebuffer.writeDouble(fixture.fr);
+        }
+        if (fixture.fp === null) {
+            bytebuffer.writeShort(0);
+        }
+        if (fixture.fp === false) {
+            bytebuffer.writeShort(1);
+        }
+        if (fixture.fp === true) {
+            bytebuffer.writeShort(2);
+        }
+        if (fixture.re === null) {
+            bytebuffer.writeDouble(Number.MAX_VALUE);
+        } else {
+            bytebuffer.writeDouble(fixture.re);
+        }
+        if (fixture.de === null) {
+            bytebuffer.writeDouble(Number.MAX_VALUE);
+        } else {
+            bytebuffer.writeDouble(fixture.de);
+        }
+        bytebuffer.writeUint(fixture.f);
+        bytebuffer.writeBoolean(fixture.d);
+        bytebuffer.writeBoolean(fixture.np);
+        bytebuffer.writeBoolean(fixture.ng);
+        bytebuffer.writeBoolean(fixture.ig);
+    }
+    bytebuffer.writeShort(map.physics.bodies.length);
+    for (let bodyId = 0; bodyId < map.physics.bodies.length; bodyId++) {
+        let body = map.physics.bodies[bodyId];
+        bytebuffer.writeUTF(body.s.type);
+        bytebuffer.writeUTF(body.s.n);
+        bytebuffer.writeDouble(body.p[0]);
+        bytebuffer.writeDouble(body.p[1]);
+        bytebuffer.writeDouble(body.a);
+        bytebuffer.writeDouble(body.s.fric);
+        bytebuffer.writeBoolean(body.s.fricp);
+        bytebuffer.writeDouble(body.s.re);
+        bytebuffer.writeDouble(body.s.de);
+        bytebuffer.writeDouble(body.lv[0]);
+        bytebuffer.writeDouble(body.lv[1]);
+        bytebuffer.writeDouble(body.av);
+        bytebuffer.writeDouble(body.s.ld);
+        bytebuffer.writeDouble(body.s.ad);
+        bytebuffer.writeBoolean(body.s.fr);
+        bytebuffer.writeBoolean(body.s.bu);
+        bytebuffer.writeDouble(body.cf.x);
+        bytebuffer.writeDouble(body.cf.y);
+        bytebuffer.writeDouble(body.cf.ct);
+        bytebuffer.writeBoolean(body.cf.w);
+        bytebuffer.writeShort(body.s.f_c);
+        bytebuffer.writeBoolean(body.s.f_1);
+        bytebuffer.writeBoolean(body.s.f_2);
+        bytebuffer.writeBoolean(body.s.f_3);
+        bytebuffer.writeBoolean(body.s.f_4);
+        bytebuffer.writeBoolean(body.s.f_p);
+        bytebuffer.writeBoolean(body.fz.on);
+        if (body.fz.on) {
+            bytebuffer.writeDouble(body.fz.x);
+            bytebuffer.writeDouble(body.fz.y);
+            bytebuffer.writeBoolean(body.fz.d);
+            bytebuffer.writeBoolean(body.fz.p);
+            bytebuffer.writeBoolean(body.fz.a);
+            bytebuffer.writeShort(body.fz.t);
+            bytebuffer.writeDouble(body.fz.cf);
+        }
+        bytebuffer.writeShort(body.fx.length);
+        for (fixtureId = 0; fixtureId < body.fx.length; fixtureId++) {
+            bytebuffer.writeShort(body.fx[fixtureId]);
+        }
+    }
+    bytebuffer.writeShort(map.spawns.length);
+    for (let spawnId = 0; spawnId < map.spawns.length; spawnId++) {
+        let spawn = map.spawns[spawnId];
+        bytebuffer.writeDouble(spawn.x);
+        bytebuffer.writeDouble(spawn.y);
+        bytebuffer.writeDouble(spawn.xv);
+        bytebuffer.writeDouble(spawn.yv);
+        bytebuffer.writeShort(spawn.priority);
+        bytebuffer.writeBoolean(spawn.r);
+        bytebuffer.writeBoolean(spawn.f);
+        bytebuffer.writeBoolean(spawn.b);
+        bytebuffer.writeBoolean(spawn.gr);
+        bytebuffer.writeBoolean(spawn.ye);
+        bytebuffer.writeUTF(spawn.n);
+    }
+    bytebuffer.writeShort(map.capZones.length);
+    for (let capZoneId = 0; capZoneId < map.capZones.length; capZoneId++) {
+        let capZone = map.capZones[capZoneId];
+        bytebuffer.writeUTF(capZone.n);
+        bytebuffer.writeDouble(capZone.l);
+        bytebuffer.writeShort(capZone.i);
+        bytebuffer.writeShort(capZone.ty);
+    }
+    bytebuffer.writeShort(map.physics.joints.length);
+    for (let jointId = 0; jointId < map.physics.joints.length; jointId++) {
+        let joint = map.physics.joints[jointId];
+        if (joint.type == "rv") {
+            bytebuffer.writeShort(1);
+            bytebuffer.writeDouble(joint.d.la);
+            bytebuffer.writeDouble(joint.d.ua);
+            bytebuffer.writeDouble(joint.d.mmt);
+            bytebuffer.writeDouble(joint.d.ms);
+            bytebuffer.writeBoolean(joint.d.el);
+            bytebuffer.writeBoolean(joint.d.em);
+            bytebuffer.writeDouble(joint.aa[0]);
+            bytebuffer.writeDouble(joint.aa[1]);
+        }
+        if (joint.type == "d") {
+            bytebuffer.writeShort(2);
+            bytebuffer.writeDouble(joint.d.fh);
+            bytebuffer.writeDouble(joint.d.dr);
+            bytebuffer.writeDouble(joint.aa[0]);
+            bytebuffer.writeDouble(joint.aa[1]);
+            bytebuffer.writeDouble(joint.ab[0]);
+            bytebuffer.writeDouble(joint.ab[1]);
+        }
+        if (joint.type == "lpj") {
+            bytebuffer.writeShort(3);
+            bytebuffer.writeDouble(joint.pax);
+            bytebuffer.writeDouble(joint.pay);
+            bytebuffer.writeDouble(joint.pa);
+            bytebuffer.writeDouble(joint.pf);
+            bytebuffer.writeDouble(joint.pl);
+            bytebuffer.writeDouble(joint.pu);
+            bytebuffer.writeDouble(joint.plen);
+            bytebuffer.writeDouble(joint.pms);
+        }
+        if (joint.type == "lsj") {
+            bytebuffer.writeShort(4);
+            bytebuffer.writeDouble(joint.sax);
+            bytebuffer.writeDouble(joint.say);
+            bytebuffer.writeDouble(joint.sf);
+            bytebuffer.writeDouble(joint.slen);
+        }
+        if (joint.type == "g") {
+            bytebuffer.writeShort(5);
+            bytebuffer.writeUTF(joint.n);
+            bytebuffer.writeShort(joint.ja);
+            bytebuffer.writeShort(joint.jb);
+            bytebuffer.writeDouble(joint.r);
+        }
+        if (joint.type != "g") {
+            bytebuffer.writeShort(joint.ba);
+            bytebuffer.writeShort(joint.bb);
+            bytebuffer.writeBoolean(joint.d.cc);
+            bytebuffer.writeDouble(joint.d.bf);
+            bytebuffer.writeBoolean(joint.d.dl);
+        }
+    }
+    let base64 = bytebuffer.toBase64();
+    let compressed = LZString.compressToEncodedURIComponent(base64);
+    return compressed;
+};
+
+bonkAPI.blankMap = {
+    v: 1,
+    s: { re: false, nc: false, pq: 1, gd: 25, fl: false },
+    physics: { shapes: [], fixtures: [], bodies: [], bro: [], joints: [], ppm: 12 },
+    spawns: [],
+    capZones: [],
+    m: {
+        a: "noauthor",
+        n: "noname",
+        dbv: 2,
+        dbid: -1,
+        authid: -1,
+        date: "",
+        rxid: 0,
+        rxn: "",
+        rxa: "",
+        rxdb: 1,
+        cr: [],
+        pub: false,
+        mo: "",
+    },
+};
+
 bonkAPI.decodeMap = function (map) {
-    var F5W = [arguments];
-    var b64mapdata = LZString.decompressFromEncodedURIComponent(map);
-    var binaryReader = new bonkAPI_bytebuffer();
+    b64mapdata = LZString.decompressFromEncodedURIComponent(map);
+    binaryReader = new bonkAPI_bytebuffer();
     binaryReader.fromBase64(b64mapdata, false);
-    map = {
-        v: 1,
-        s: { re: false, nc: false, pq: 1, gd: 25, fl: false },
-        physics: { shapes: [], fixtures: [], bodies: [], bro: [], joints: [], ppm: 12 },
-        spawns: [],
-        capZones: [],
-        m: {
-            a: "noauthor",
-            n: "noname",
-            dbv: 2,
-            dbid: -1,
-            authid: -1,
-            date: "",
-            rxid: 0,
-            rxn: "",
-            rxa: "",
-            rxdb: 1,
-            cr: [],
-            pub: false,
-            mo: "",
-        },
-    };
-    map.physics = map.physics;
+    map = bonkAPI.blankMap;
     map.v = binaryReader.readShort();
     if (map.v > 15) {
         throw new Error("Future map version, please refresh page");
@@ -3424,10 +3682,9 @@ bonkAPI.decodeMap = function (map) {
         map.m.vd = binaryReader.readUint();
     }
     if (map.v >= 4) {
-        F5W[7] = binaryReader.readShort();
-        for (F5W[83] = 0; F5W[83] < F5W[7]; F5W[83]++) {
+        let crLength = binaryReader.readShort();
+        for (let contributorId = 0; contributorId < crLength; contributorId++)
             map.m.cr.push(binaryReader.readUTF());
-        }
     }
     if (map.v >= 5) {
         map.m.mo = binaryReader.readUTF();
@@ -3440,233 +3697,183 @@ bonkAPI.decodeMap = function (map) {
         map.m.dbv = binaryReader.readInt();
     }
     map.physics.ppm = binaryReader.readShort();
-    F5W[4] = binaryReader.readShort();
-    for (F5W[15] = 0; F5W[15] < F5W[4]; F5W[15]++) {
-        map.physics.bro[F5W[15]] = binaryReader.readShort();
-    }
-    F5W[6] = binaryReader.readShort();
-    for (F5W[28] = 0; F5W[28] < F5W[6]; F5W[28]++) {
-        F5W[5] = binaryReader.readShort();
-        if (F5W[5] == 1) {
-            map.physics.shapes[F5W[28]] = { type: "bx", w: 10, h: 40, c: [0, 0], a: 0.0, sk: false };
-            map.physics.shapes[F5W[28]].w = binaryReader.readDouble();
-            map.physics.shapes[F5W[28]].h = binaryReader.readDouble();
-            map.physics.shapes[F5W[28]].c = [binaryReader.readDouble(), binaryReader.readDouble()];
-            map.physics.shapes[F5W[28]].a = binaryReader.readDouble();
-            map.physics.shapes[F5W[28]].sk = binaryReader.readBoolean();
+    let broLength = binaryReader.readShort();
+    for (let bodyId = 0; bodyId < broLength; bodyId++)
+        map.physics.bro[bodyId] = binaryReader.readShort();
+
+    let shapesLength = binaryReader.readShort();
+    for (let shapeId = 0; shapeId < shapesLength; shapeId++) {
+        let shapeType = binaryReader.readShort();
+        if (shapeType == 1) {
+            map.physics.shapes[shapeId] = Y.getNewBoxShape();
+            map.physics.shapes[shapeId].w = binaryReader.readDouble();
+            map.physics.shapes[shapeId].h = binaryReader.readDouble();
+            map.physics.shapes[shapeId].c = [binaryReader.readDouble(), binaryReader.readDouble()];
+            map.physics.shapes[shapeId].a = binaryReader.readDouble();
+            map.physics.shapes[shapeId].sk = binaryReader.readBoolean();
         }
-        if (F5W[5] == 2) {
-            map.physics.shapes[F5W[28]] = { type: "ci", r: 25, c: [0, 0], sk: false };
-            map.physics.shapes[F5W[28]].r = binaryReader.readDouble();
-            map.physics.shapes[F5W[28]].c = [binaryReader.readDouble(), binaryReader.readDouble()];
-            map.physics.shapes[F5W[28]].sk = binaryReader.readBoolean();
+        if (shapeType == 2) {
+            map.physics.shapes[shapeId] = Y.getNewCircleShape();
+            map.physics.shapes[shapeId].r = binaryReader.readDouble();
+            map.physics.shapes[shapeId].c = [binaryReader.readDouble(), binaryReader.readDouble()];
+            map.physics.shapes[shapeId].sk = binaryReader.readBoolean();
         }
-        if (F5W[5] == 3) {
-            map.physics.shapes[F5W[28]] = { type: "po", v: [], s: 1, a: 0, c: [0, 0] };
-            map.physics.shapes[F5W[28]].s = binaryReader.readDouble();
-            map.physics.shapes[F5W[28]].a = binaryReader.readDouble();
-            map.physics.shapes[F5W[28]].c = [binaryReader.readDouble(), binaryReader.readDouble()];
-            F5W[74] = binaryReader.readShort();
-            map.physics.shapes[F5W[28]].v = [];
-            for (F5W[27] = 0; F5W[27] < F5W[74]; F5W[27]++) {
-                map.physics.shapes[F5W[28]].v.push([
-                    binaryReader.readDouble(),
-                    binaryReader.readDouble(),
-                ]);
+        if (shapeType == 3) {
+            map.physics.shapes[shapeId] = Y.getNewPolyShape();
+            map.physics.shapes[shapeId].s = binaryReader.readDouble();
+            map.physics.shapes[shapeId].a = binaryReader.readDouble();
+            map.physics.shapes[shapeId].c = [binaryReader.readDouble(), binaryReader.readDouble()];
+            let verticesLength = binaryReader.readShort();
+            map.physics.shapes[shapeId].v = [];
+            for (vertice = 0; vertice < verticesLength; vertice++) {
+                map.physics.shapes[shapeId].v.push([binaryReader.readDouble(), binaryReader.readDouble()]);
             }
         }
     }
-    F5W[71] = binaryReader.readShort();
-    for (F5W[17] = 0; F5W[17] < F5W[71]; F5W[17]++) {
-        map.physics.fixtures[F5W[17]] = {
-            sh: 0,
-            n: "Def Fix",
-            fr: 0.3,
-            fp: null,
-            re: 0.8,
-            de: 0.3,
-            f: 0x4f7cac,
-            d: false,
-            np: false,
-            ng: false,
-        };
-        map.physics.fixtures[F5W[17]].sh = binaryReader.readShort();
-        map.physics.fixtures[F5W[17]].n = binaryReader.readUTF();
-        map.physics.fixtures[F5W[17]].fr = binaryReader.readDouble();
-        if (map.physics.fixtures[F5W[17]].fr == Number.MAX_VALUE) {
-            map.physics.fixtures[F5W[17]].fr = null;
+    let fixturesLength = binaryReader.readShort();
+    for (let fixtureId = 0; fixtureId < fixturesLength; fixtureId++) {
+        map.physics.fixtures[fixtureId] = Y.getNewFixture();
+        map.physics.fixtures[fixtureId].sh = binaryReader.readShort();
+        map.physics.fixtures[fixtureId].n = binaryReader.readUTF();
+        map.physics.fixtures[fixtureId].fr = binaryReader.readDouble();
+        if (map.physics.fixtures[fixtureId].fr == Number.MAX_VALUE) {
+            map.physics.fixtures[fixtureId].fr = null;
         }
-        F5W[12] = binaryReader.readShort();
-        if (F5W[12] == 0) {
-            map.physics.fixtures[F5W[17]].fp = null;
+        let fricPlayers = binaryReader.readShort();
+        if (fricPlayers == 0) {
+            map.physics.fixtures[fixtureId].fp = null;
         }
-        if (F5W[12] == 1) {
-            map.physics.fixtures[F5W[17]].fp = false;
+        if (fricPlayers == 1) {
+            map.physics.fixtures[fixtureId].fp = false;
         }
-        if (F5W[12] == 2) {
-            map.physics.fixtures[F5W[17]].fp = true;
+        if (fricPlayers == 2) {
+            map.physics.fixtures[fixtureId].fp = true;
         }
-        map.physics.fixtures[F5W[17]].re = binaryReader.readDouble();
-        if (map.physics.fixtures[F5W[17]].re == Number.MAX_VALUE) {
-            map.physics.fixtures[F5W[17]].re = null;
+        map.physics.fixtures[fixtureId].re = binaryReader.readDouble();
+        if (map.physics.fixtures[fixtureId].re == Number.MAX_VALUE) {
+            map.physics.fixtures[fixtureId].re = null;
         }
-        map.physics.fixtures[F5W[17]].de = binaryReader.readDouble();
-        if (map.physics.fixtures[F5W[17]].de == Number.MAX_VALUE) {
-            map.physics.fixtures[F5W[17]].de = null;
+        map.physics.fixtures[fixtureId].de = binaryReader.readDouble();
+        if (map.physics.fixtures[fixtureId].de == Number.MAX_VALUE) {
+            map.physics.fixtures[fixtureId].de = null;
         }
-        map.physics.fixtures[F5W[17]].f = binaryReader.readUint();
-        map.physics.fixtures[F5W[17]].d = binaryReader.readBoolean();
-        map.physics.fixtures[F5W[17]].np = binaryReader.readBoolean();
+        map.physics.fixtures[fixtureId].f = binaryReader.readUint();
+        map.physics.fixtures[fixtureId].d = binaryReader.readBoolean();
+        map.physics.fixtures[fixtureId].np = binaryReader.readBoolean();
         if (map.v >= 11) {
-            map.physics.fixtures[F5W[17]].ng = binaryReader.readBoolean();
+            map.physics.fixtures[fixtureId].ng = binaryReader.readBoolean();
         }
         if (map.v >= 12) {
-            map.physics.fixtures[F5W[17]].ig = binaryReader.readBoolean();
+            map.physics.fixtures[fixtureId].ig = binaryReader.readBoolean();
         }
     }
-    F5W[63] = binaryReader.readShort();
-    for (F5W[52] = 0; F5W[52] < F5W[63]; F5W[52]++) {
-        map.physics.bodies[F5W[52]] = {
-            type: "s",
-            n: "Unnamed",
-            p: [0, 0],
-            a: 0,
-            fric: 0.3,
-            fricp: false,
-            re: 0.8,
-            de: 0.3,
-            lv: [0, 0],
-            av: 0,
-            ld: 0,
-            ad: 0,
-            fr: false,
-            bu: false,
-            cf: { x: 0, y: 0, w: true, ct: 0 },
-            fx: [],
-            f_c: 1,
-            f_p: true,
-            f_1: true,
-            f_2: true,
-            f_3: true,
-            f_4: true,
-            fz: { on: false, x: 0, y: 0, d: true, p: true, a: true, t: 0, cf: 0 },
-        };
-        map.physics.bodies[F5W[52]].type = binaryReader.readUTF();
-        map.physics.bodies[F5W[52]].n = binaryReader.readUTF();
-        map.physics.bodies[F5W[52]].p = [binaryReader.readDouble(), binaryReader.readDouble()];
-        map.physics.bodies[F5W[52]].a = binaryReader.readDouble();
-        map.physics.bodies[F5W[52]].fric = binaryReader.readDouble();
-        map.physics.bodies[F5W[52]].fricp = binaryReader.readBoolean();
-        map.physics.bodies[F5W[52]].re = binaryReader.readDouble();
-        map.physics.bodies[F5W[52]].de = binaryReader.readDouble();
-        map.physics.bodies[F5W[52]].lv = [binaryReader.readDouble(), binaryReader.readDouble()];
-        map.physics.bodies[F5W[52]].av = binaryReader.readDouble();
-        map.physics.bodies[F5W[52]].ld = binaryReader.readDouble();
-        map.physics.bodies[F5W[52]].ad = binaryReader.readDouble();
-        map.physics.bodies[F5W[52]].fr = binaryReader.readBoolean();
-        map.physics.bodies[F5W[52]].bu = binaryReader.readBoolean();
-        map.physics.bodies[F5W[52]].cf.x = binaryReader.readDouble();
-        map.physics.bodies[F5W[52]].cf.y = binaryReader.readDouble();
-        map.physics.bodies[F5W[52]].cf.ct = binaryReader.readDouble();
-        map.physics.bodies[F5W[52]].cf.w = binaryReader.readBoolean();
-        map.physics.bodies[F5W[52]].f_c = binaryReader.readShort();
-        map.physics.bodies[F5W[52]].f_1 = binaryReader.readBoolean();
-        map.physics.bodies[F5W[52]].f_2 = binaryReader.readBoolean();
-        map.physics.bodies[F5W[52]].f_3 = binaryReader.readBoolean();
-        map.physics.bodies[F5W[52]].f_4 = binaryReader.readBoolean();
+    let bodiesLength = binaryReader.readShort();
+    for (let bodyId = 0; bodyId < bodiesLength; bodyId++) {
+        map.physics.bodies[bodyId] = Y.getNewBody();
+        map.physics.bodies[bodyId].s.type = binaryReader.readUTF();
+        map.physics.bodies[bodyId].s.n = binaryReader.readUTF();
+        map.physics.bodies[bodyId].p = [binaryReader.readDouble(), binaryReader.readDouble()];
+        map.physics.bodies[bodyId].a = binaryReader.readDouble();
+        map.physics.bodies[bodyId].s.fric = binaryReader.readDouble();
+        map.physics.bodies[bodyId].s.fricp = binaryReader.readBoolean();
+        map.physics.bodies[bodyId].s.re = binaryReader.readDouble();
+        map.physics.bodies[bodyId].s.de = binaryReader.readDouble();
+        map.physics.bodies[bodyId].lv = [binaryReader.readDouble(), binaryReader.readDouble()];
+        map.physics.bodies[bodyId].av = binaryReader.readDouble();
+        map.physics.bodies[bodyId].s.ld = binaryReader.readDouble();
+        map.physics.bodies[bodyId].s.ad = binaryReader.readDouble();
+        map.physics.bodies[bodyId].s.fr = binaryReader.readBoolean();
+        map.physics.bodies[bodyId].s.bu = binaryReader.readBoolean();
+        map.physics.bodies[bodyId].cf.x = binaryReader.readDouble();
+        map.physics.bodies[bodyId].cf.y = binaryReader.readDouble();
+        map.physics.bodies[bodyId].cf.ct = binaryReader.readDouble();
+        map.physics.bodies[bodyId].cf.w = binaryReader.readBoolean();
+        map.physics.bodies[bodyId].s.f_c = binaryReader.readShort();
+        map.physics.bodies[bodyId].s.f_1 = binaryReader.readBoolean();
+        map.physics.bodies[bodyId].s.f_2 = binaryReader.readBoolean();
+        map.physics.bodies[bodyId].s.f_3 = binaryReader.readBoolean();
+        map.physics.bodies[bodyId].s.f_4 = binaryReader.readBoolean();
         if (map.v >= 2) {
-            map.physics.bodies[F5W[52]].f_p = binaryReader.readBoolean();
+            map.physics.bodies[bodyId].s.f_p = binaryReader.readBoolean();
         }
         if (map.v >= 14) {
-            map.physics.bodies[F5W[52]].fz.on = binaryReader.readBoolean();
-            if (map.physics.bodies[F5W[52]].fz.on) {
-                map.physics.bodies[F5W[52]].fz.x = binaryReader.readDouble();
-                map.physics.bodies[F5W[52]].fz.y = binaryReader.readDouble();
-                map.physics.bodies[F5W[52]].fz.d = binaryReader.readBoolean();
-                map.physics.bodies[F5W[52]].fz.p = binaryReader.readBoolean();
-                map.physics.bodies[F5W[52]].fz.a = binaryReader.readBoolean();
+            map.physics.bodies[bodyId].fz.on = binaryReader.readBoolean();
+            if (map.physics.bodies[bodyId].fz.on) {
+                map.physics.bodies[bodyId].fz.x = binaryReader.readDouble();
+                map.physics.bodies[bodyId].fz.y = binaryReader.readDouble();
+                map.physics.bodies[bodyId].fz.d = binaryReader.readBoolean();
+                map.physics.bodies[bodyId].fz.p = binaryReader.readBoolean();
+                map.physics.bodies[bodyId].fz.a = binaryReader.readBoolean();
                 if (map.v >= 15) {
-                    map.physics.bodies[F5W[52]].t = binaryReader.readShort();
-                    map.physics.bodies[F5W[52]].cf = binaryReader.readDouble();
+                    map.physics.bodies[bodyId].fz.t = binaryReader.readShort();
+                    map.physics.bodies[bodyId].fz.cf = binaryReader.readDouble();
                 }
             }
         }
-        F5W[88] = binaryReader.readShort();
-        for (F5W[65] = 0; F5W[65] < F5W[88]; F5W[65]++) {
-            map.physics.bodies[F5W[52]].fx.push(binaryReader.readShort());
+        let fixturesLength = binaryReader.readShort();
+        for (let fixtureId = 0; fixtureId < fixturesLength; fixtureId++) {
+            map.physics.bodies[bodyId].fx.push(binaryReader.readShort());
         }
     }
-    F5W[97] = binaryReader.readShort();
-    for (F5W[41] = 0; F5W[41] < F5W[97]; F5W[41]++) {
-        map.spawns[F5W[41]] = {
-            x: 400,
-            y: 300,
-            xv: 0,
-            yv: 0,
-            priority: 5,
-            r: true,
-            f: true,
-            b: true,
-            gr: false,
-            ye: false,
-            n: "Spawn",
-        };
-        F5W[35] = map.spawns[F5W[41]];
-        F5W[35].x = binaryReader.readDouble();
-        F5W[35].y = binaryReader.readDouble();
-        F5W[35].xv = binaryReader.readDouble();
-        F5W[35].yv = binaryReader.readDouble();
-        F5W[35].priority = binaryReader.readShort();
-        F5W[35].r = binaryReader.readBoolean();
-        F5W[35].f = binaryReader.readBoolean();
-        F5W[35].b = binaryReader.readBoolean();
-        F5W[35].gr = binaryReader.readBoolean();
-        F5W[35].ye = binaryReader.readBoolean();
-        F5W[35].n = binaryReader.readUTF();
+    let spawnsLength = binaryReader.readShort();
+    for (spawnId = 0; spawnId < spawnsLength; spawnId++) {
+        map.spawns[spawnId] = Y.getNewSpawn();
+        spawn = map.spawns[spawnId];
+        spawn.x = binaryReader.readDouble();
+        spawn.y = binaryReader.readDouble();
+        spawn.xv = binaryReader.readDouble();
+        spawn.yv = binaryReader.readDouble();
+        spawn.priority = binaryReader.readShort();
+        spawn.r = binaryReader.readBoolean();
+        spawn.f = binaryReader.readBoolean();
+        spawn.b = binaryReader.readBoolean();
+        spawn.gr = binaryReader.readBoolean();
+        spawn.ye = binaryReader.readBoolean();
+        spawn.n = binaryReader.readUTF();
     }
-    F5W[16] = binaryReader.readShort();
-    for (F5W[25] = 0; F5W[25] < F5W[16]; F5W[25]++) {
-        map.capZones[F5W[25]] = { n: "Cap Zone", ty: 1, l: 10, i: -1 };
-        map.capZones[F5W[25]].n = binaryReader.readUTF();
-        map.capZones[F5W[25]].l = binaryReader.readDouble();
-        map.capZones[F5W[25]].i = binaryReader.readShort();
+    let capZonesLength = binaryReader.readShort();
+    for (capZoneId = 0; capZoneId < capZonesLength; capZoneId++) {
+        map.capZones[capZoneId] = Y.getNewCapZone();
+        map.capZones[capZoneId].n = binaryReader.readUTF();
+        map.capZones[capZoneId].l = binaryReader.readDouble();
+        map.capZones[capZoneId].i = binaryReader.readShort();
         if (map.v >= 6) {
-            map.capZones[F5W[25]].ty = binaryReader.readShort();
+            map.capZones[capZoneId].ty = binaryReader.readShort();
         }
     }
-    F5W[98] = binaryReader.readShort();
-    for (F5W[19] = 0; F5W[19] < F5W[98]; F5W[19]++) {
-        F5W[31] = binaryReader.readShort();
-        if (F5W[31] == 1) {
-            map.physics.joints[F5W[19]] = {
+    let jointsLength = binaryReader.readShort();
+    for (jointId = 0; jointId < jointsLength; jointId++) {
+        let jointType = binaryReader.readShort();
+        if (jointType == 1) {
+            map.physics.joints[jointId] = {
                 type: "rv",
                 d: { la: 0, ua: 0, mmt: 0, ms: 0, el: false, em: false, cc: false, bf: 0, dl: true },
                 aa: [0, 0],
             };
-            F5W[20] = map.physics.joints[F5W[19]];
-            F5W[20].d.la = binaryReader.readDouble();
-            F5W[20].d.ua = binaryReader.readDouble();
-            F5W[20].d.mmt = binaryReader.readDouble();
-            F5W[20].d.ms = binaryReader.readDouble();
-            F5W[20].d.el = binaryReader.readBoolean();
-            F5W[20].d.em = binaryReader.readBoolean();
-            F5W[20].aa = [binaryReader.readDouble(), binaryReader.readDouble()];
+            joint = map.physics.joints[jointId];
+            joint.d.la = binaryReader.readDouble();
+            joint.d.ua = binaryReader.readDouble();
+            joint.d.mmt = binaryReader.readDouble();
+            joint.d.ms = binaryReader.readDouble();
+            joint.d.el = binaryReader.readBoolean();
+            joint.d.em = binaryReader.readBoolean();
+            joint.aa = [binaryReader.readDouble(), binaryReader.readDouble()];
         }
-        if (F5W[31] == 2) {
-            map.physics.joints[F5W[19]] = {
+        if (jointType == 2) {
+            map.physics.joints[jointId] = {
                 type: "d",
                 d: { fh: 0, dr: 0, cc: false, bf: 0, dl: true },
                 aa: [0, 0],
                 ab: [0, 0],
             };
-            F5W[87] = map.physics.joints[F5W[19]];
-            F5W[87].d.fh = binaryReader.readDouble();
-            F5W[87].d.dr = binaryReader.readDouble();
-            F5W[87].aa = [binaryReader.readDouble(), binaryReader.readDouble()];
-            F5W[87].ab = [binaryReader.readDouble(), binaryReader.readDouble()];
+            joint = map.physics.joints[jointId];
+            joint.d.fh = binaryReader.readDouble();
+            joint.d.dr = binaryReader.readDouble();
+            joint.aa = [binaryReader.readDouble(), binaryReader.readDouble()];
+            joint.ab = [binaryReader.readDouble(), binaryReader.readDouble()];
         }
-        if (F5W[31] == 3) {
-            map.physics.joints[F5W[19]] = {
+        if (jointType == 3) {
+            map.physics.joints[jointId] = {
                 type: "lpj",
                 d: { cc: false, bf: 0, dl: true },
                 pax: 0,
@@ -3678,18 +3885,18 @@ bonkAPI.decodeMap = function (map) {
                 plen: 0,
                 pms: 0,
             };
-            F5W[90] = map.physics.joints[F5W[19]];
-            F5W[90].pax = binaryReader.readDouble();
-            F5W[90].pay = binaryReader.readDouble();
-            F5W[90].pa = binaryReader.readDouble();
-            F5W[90].pf = binaryReader.readDouble();
-            F5W[90].pl = binaryReader.readDouble();
-            F5W[90].pu = binaryReader.readDouble();
-            F5W[90].plen = binaryReader.readDouble();
-            F5W[90].pms = binaryReader.readDouble();
+            joint = map.physics.joints[jointId];
+            joint.pax = binaryReader.readDouble();
+            joint.pay = binaryReader.readDouble();
+            joint.pa = binaryReader.readDouble();
+            joint.pf = binaryReader.readDouble();
+            joint.pl = binaryReader.readDouble();
+            joint.pu = binaryReader.readDouble();
+            joint.plen = binaryReader.readDouble();
+            joint.pms = binaryReader.readDouble();
         }
-        if (F5W[31] == 4) {
-            map.physics.joints[F5W[19]] = {
+        if (jointType == 4) {
+            map.physics.joints[jointId] = {
                 type: "lsj",
                 d: { cc: false, bf: 0, dl: true },
                 sax: 0,
@@ -3697,30 +3904,31 @@ bonkAPI.decodeMap = function (map) {
                 sf: 0,
                 slen: 0,
             };
-            F5W[44] = map.physics.joints[F5W[19]];
-            F5W[44].sax = binaryReader.readDouble();
-            F5W[44].say = binaryReader.readDouble();
-            F5W[44].sf = binaryReader.readDouble();
-            F5W[44].slen = binaryReader.readDouble();
+            joint = map.physics.joints[jointId];
+            joint.sax = binaryReader.readDouble();
+            joint.say = binaryReader.readDouble();
+            joint.sf = binaryReader.readDouble();
+            joint.slen = binaryReader.readDouble();
         }
-        if (F5W[31] == 5) {
-            map.physics.joints[F5W[19]] = { type: "g", n: "", ja: -1, jb: -1, r: 1 };
-            F5W[91] = map.physics.joints[F5W[19]];
-            F5W[91].n = binaryReader.readUTF();
-            F5W[91].ja = binaryReader.readShort();
-            F5W[91].jb = binaryReader.readShort();
-            F5W[91].r = binaryReader.readDouble();
+        if (jointType == 5) {
+            map.physics.joints[jointId] = { type: "g", n: "", ja: -1, jb: -1, r: 1 };
+            joint = map.physics.joints[jointId];
+            joint.n = binaryReader.readUTF();
+            joint.ja = binaryReader.readShort();
+            joint.jb = binaryReader.readShort();
+            joint.r = binaryReader.readDouble();
         }
-        if (F5W[31] != 5) {
-            map.physics.joints[F5W[19]].ba = binaryReader.readShort();
-            map.physics.joints[F5W[19]].bb = binaryReader.readShort();
-            map.physics.joints[F5W[19]].d.cc = binaryReader.readBoolean();
-            map.physics.joints[F5W[19]].d.bf = binaryReader.readDouble();
-            map.physics.joints[F5W[19]].d.dl = binaryReader.readBoolean();
+        if (jointType != 5) {
+            map.physics.joints[jointId].ba = binaryReader.readShort();
+            map.physics.joints[jointId].bb = binaryReader.readShort();
+            map.physics.joints[jointId].d.cc = binaryReader.readBoolean();
+            map.physics.joints[jointId].d.bf = binaryReader.readDouble();
+            map.physics.joints[jointId].d.dl = binaryReader.readBoolean();
         }
     }
     return map;
 };
+
 window.PIXI.Graphics.prototype.drawShape = function(...args) {
     //! testing whether cap can be easily found in drawShape
     //! in drawCircle, capzone has attribute 'cap: "bet"' inside fill_outline
@@ -3804,6 +4012,7 @@ if(bonkAPI.events.hasEvent["graphicsReady"]) {
     }
     bonkAPI.events.fireEvent("graphicsReady", sendObj);
 }
+
 bonkHUD.loadStyleSettings();
 bonkHUD.initialize();
 bonkHUD.updateStyleSettings();
