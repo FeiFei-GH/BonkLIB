@@ -575,7 +575,7 @@ bonkAPI.decodeMap = function (map) {
     for (let shapeId = 0; shapeId < shapesLength; shapeId++) {
         let shapeType = binaryReader.readShort();
         if (shapeType == 1) {
-            map.physics.shapes[shapeId] = Y.getNewBoxShape();
+            map.physics.shapes[shapeId] = { type: "bx", w: 10, h: 40, c: [0, 0], a: 0.0, sk: false };
             map.physics.shapes[shapeId].w = binaryReader.readDouble();
             map.physics.shapes[shapeId].h = binaryReader.readDouble();
             map.physics.shapes[shapeId].c = [binaryReader.readDouble(), binaryReader.readDouble()];
@@ -583,13 +583,13 @@ bonkAPI.decodeMap = function (map) {
             map.physics.shapes[shapeId].sk = binaryReader.readBoolean();
         }
         if (shapeType == 2) {
-            map.physics.shapes[shapeId] = Y.getNewCircleShape();
+            map.physics.shapes[shapeId] = { type: "ci", r: 25, c: [0, 0], sk: false };
             map.physics.shapes[shapeId].r = binaryReader.readDouble();
             map.physics.shapes[shapeId].c = [binaryReader.readDouble(), binaryReader.readDouble()];
             map.physics.shapes[shapeId].sk = binaryReader.readBoolean();
         }
         if (shapeType == 3) {
-            map.physics.shapes[shapeId] = Y.getNewPolyShape();
+            map.physics.shapes[shapeId] = { type: "po", v: [], s: 1, a: 0, c: [0, 0] };
             map.physics.shapes[shapeId].s = binaryReader.readDouble();
             map.physics.shapes[shapeId].a = binaryReader.readDouble();
             map.physics.shapes[shapeId].c = [binaryReader.readDouble(), binaryReader.readDouble()];
@@ -602,7 +602,18 @@ bonkAPI.decodeMap = function (map) {
     }
     let fixturesLength = binaryReader.readShort();
     for (let fixtureId = 0; fixtureId < fixturesLength; fixtureId++) {
-        map.physics.fixtures[fixtureId] = Y.getNewFixture();
+        map.physics.fixtures[fixtureId] = {
+            sh: 0,
+            n: "Def Fix",
+            fr: 0.3,
+            fp: null,
+            re: 0.8,
+            de: 0.3,
+            f: 0x4f7cac,
+            d: false,
+            np: false,
+            ng: false,
+        };
         map.physics.fixtures[fixtureId].sh = binaryReader.readShort();
         map.physics.fixtures[fixtureId].n = binaryReader.readUTF();
         map.physics.fixtures[fixtureId].fr = binaryReader.readDouble();
@@ -639,7 +650,47 @@ bonkAPI.decodeMap = function (map) {
     }
     let bodiesLength = binaryReader.readShort();
     for (let bodyId = 0; bodyId < bodiesLength; bodyId++) {
-        map.physics.bodies[bodyId] = Y.getNewBody();
+        map.physics.bodies[bodyId] = {
+            p: [0, 0],
+            a: 0,
+            lv: [0, 0],
+            av: 0,
+            cf: {
+                x: 0,
+                y: 0,
+                w: true,
+                ct: 0
+            },
+            fx: [],
+            fz: {
+                on: false,
+                x: 0,
+                y: 0,
+                d: true,
+                p: true,
+                a: true,
+                t: 0,
+                cf: 0
+            },
+            s: {
+                type: "s",
+                n: "Unnamed",
+                fric: 0.3,
+                fricp: false,
+                re: 0.8,
+                de: 0.3,
+                ld: 0,
+                ad: 0,
+                fr: false,
+                bu: false,
+                f_c: 1,
+                f_p: true,
+                f_1: true,
+                f_2: true,
+                f_3: true,
+                f_4: true
+            }
+        };
         map.physics.bodies[bodyId].s.type = binaryReader.readUTF();
         map.physics.bodies[bodyId].s.n = binaryReader.readUTF();
         map.physics.bodies[bodyId].p = [binaryReader.readDouble(), binaryReader.readDouble()];
@@ -687,7 +738,19 @@ bonkAPI.decodeMap = function (map) {
     }
     let spawnsLength = binaryReader.readShort();
     for (spawnId = 0; spawnId < spawnsLength; spawnId++) {
-        map.spawns[spawnId] = Y.getNewSpawn();
+        map.spawns[spawnId] = {
+            x: 400,
+            y: 300,
+            xv: 0,
+            yv: 0,
+            priority: 5,
+            r: true,
+            f: true,
+            b: true,
+            gr: false,
+            ye: false,
+            n: "Spawn",
+        };
         spawn = map.spawns[spawnId];
         spawn.x = binaryReader.readDouble();
         spawn.y = binaryReader.readDouble();
@@ -703,7 +766,7 @@ bonkAPI.decodeMap = function (map) {
     }
     let capZonesLength = binaryReader.readShort();
     for (capZoneId = 0; capZoneId < capZonesLength; capZoneId++) {
-        map.capZones[capZoneId] = Y.getNewCapZone();
+        map.capZones[capZoneId] = { n: "Cap Zone", ty: 1, l: 10, i: -1 };
         map.capZones[capZoneId].n = binaryReader.readUTF();
         map.capZones[capZoneId].l = binaryReader.readDouble();
         map.capZones[capZoneId].i = binaryReader.readShort();
