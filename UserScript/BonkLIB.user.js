@@ -2051,8 +2051,8 @@ bonkHUD.createMod = function (modName, opts = {}) {
         if(opts.bonkLIBVersion != bonkLIB.version) {
             if(typeof opts.bonkLIBVersion === 'string') {
                 if(opts.bonkLIBVersion.substring(0, opts.bonkLIBVersion.lastIndexOf(".")) != bonkLIB.version.substring(0, bonkLIB.version.lastIndexOf(".")))
-                    alert(windowName + " may not be compatible with current version of BonkLIB ("+opts.bonkLIBVersion+" =/= "+bonkLIB.version+")");
-                console.log(windowName + " may not be compatible with current version of BonkLIB ("+opts.bonkLIBVersion+" =/= "+bonkLIB.version+")");
+                    alert(modName + " may not be compatible with current version of BonkLIB ("+opts.bonkLIBVersion+" =/= "+bonkLIB.version+")");
+                console.log(modName + " may not be compatible with current version of BonkLIB ("+opts.bonkLIBVersion+" =/= "+bonkLIB.version+")");
             }
             else {
                 alert("Version is incompatible, please check with mod maker to fix");
