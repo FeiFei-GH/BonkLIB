@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         BonkLIB
-// @version      1.1.4
+// @version      1.1.5
 // @author       FeiFei + Clarifi + BoZhi
 // @namespace    https://github.com/FeiFei-GH/BonkLIB
 // @description  BonkAPI + BonkHUD
@@ -16,7 +16,7 @@ https://greasyfork.org/en/scripts/433861-code-injector-bonk-io
 
 // ! Compitable with Bonk Version 49
 window.bonkLIB = {};
-bonkLIB.version = "1.1.4";
+bonkLIB.version = "1.1.5";
 
 
 window.bonkAPI = {};
