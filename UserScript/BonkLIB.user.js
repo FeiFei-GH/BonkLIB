@@ -3399,34 +3399,32 @@ bonkAPI.encodeMap = function (map) {
     return compressed;
 };
 
-bonkAPI.blankMap = {
-    v: 1,
-    s: { re: false, nc: false, pq: 1, gd: 25, fl: false },
-    physics: { shapes: [], fixtures: [], bodies: [], bro: [], joints: [], ppm: 12 },
-    spawns: [],
-    capZones: [],
-    m: {
-        a: "noauthor",
-        n: "noname",
-        dbv: 2,
-        dbid: -1,
-        authid: -1,
-        date: "",
-        rxid: 0,
-        rxn: "",
-        rxa: "",
-        rxdb: 1,
-        cr: [],
-        pub: false,
-        mo: "",
-    },
-};
-
 bonkAPI.decodeMap = function (map) {
     b64mapdata = LZString.decompressFromEncodedURIComponent(map);
     binaryReader = new bonkAPI_bytebuffer();
     binaryReader.fromBase64(b64mapdata, false);
-    map = bonkAPI.blankMap;
+    map = {
+        v: 1,
+        s: { re: false, nc: false, pq: 1, gd: 25, fl: false },
+        physics: { shapes: [], fixtures: [], bodies: [], bro: [], joints: [], ppm: 12 },
+        spawns: [],
+        capZones: [],
+        m: {
+            a: "noauthor",
+            n: "noname",
+            dbv: 2,
+            dbid: -1,
+            authid: -1,
+            date: "",
+            rxid: 0,
+            rxn: "",
+            rxa: "",
+            rxdb: 1,
+            cr: [],
+            pub: false,
+            mo: "",
+        },
+    };
     map.v = binaryReader.readShort();
     if (map.v > 15) {
         throw new Error("Future map version, please refresh page");
