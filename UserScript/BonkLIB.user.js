@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         BonkLIB
-// @version      1.2.1
+// @version      1.2.2
 // @author       FeiFei + Clarifi + BoZhi
 // @namespace    https://github.com/FeiFei-GH/BonkLIB
 // @description  BonkAPI + BonkHUD
@@ -16,7 +16,7 @@ https://greasyfork.org/en/scripts/433861-code-injector-bonk-io
 
 // ! Compitable with Bonk Version 49
 window.bonkLIB = {};
-bonkLIB.version = "1.2.1";
+bonkLIB.version = "1.2.2";
 
 
 window.bonkAPI = {};
@@ -51,6 +51,8 @@ bonkAPI.myToken = -1; // Client's token
 bonkAPI.hostID = -1; // Host's ID
 
 bonkAPI.isLoggingIn = false;
+bonkAPI._isBonkLogin = false;
+bonkAPI.bonkToken = null; // Bonk.io JWT token (captured from login_auto/login_legacy)
 
 // MGF vars
 bonkAPI.bonkWSS = 0;
@@ -1741,7 +1743,9 @@ window.XMLHttpRequest.prototype.open = function (_, url) {
     if (url.includes("scripts/login_legacy")) {
         bonkAPI.isLoggingIn = true;
     }
-    //? Could check for other post requests but not necessary
+    if (url.includes("scripts/login_auto") || url.includes("scripts/login_legacy")) {
+        bonkAPI._isBonkLogin = true;
+    }
 
     bonkAPI.originalXMLOpen.call(this, ...arguments);
 };
@@ -1749,10 +1753,27 @@ window.XMLHttpRequest.prototype.send = function (data) {
     if (bonkAPI.isLoggingIn) {
         this.onreadystatechange = function () {
             if (this.readyState == 4) {
-                bonkAPI.myToken = JSON.parse(this.response)["token"];
+                try {
+                    bonkAPI.myToken = JSON.parse(this.response)["token"];
+                } catch {}
             }
         };
         bonkAPI.isLoggingIn = false;
+    }
+    if (bonkAPI._isBonkLogin) {
+        var originalOnReady = this.onreadystatechange;
+        this.onreadystatechange = function () {
+            if (this.readyState == 4) {
+                try {
+                    var resp = JSON.parse(this.response);
+                    if (resp.r === "success" && resp.token) {
+                        bonkAPI.bonkToken = resp.token;
+                    }
+                } catch {}
+            }
+            if (originalOnReady) originalOnReady.call(this);
+        };
+        bonkAPI._isBonkLogin = false;
     }
     bonkAPI.originalXMLSend.call(this, ...arguments);
 };
