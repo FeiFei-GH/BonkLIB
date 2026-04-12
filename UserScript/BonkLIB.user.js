@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         BonkLIB
-// @version      1.1.6
+// @version      1.2.1
 // @author       FeiFei + Clarifi + BoZhi
 // @namespace    https://github.com/FeiFei-GH/BonkLIB
 // @description  BonkAPI + BonkHUD
@@ -16,7 +16,7 @@ https://greasyfork.org/en/scripts/433861-code-injector-bonk-io
 
 // ! Compitable with Bonk Version 49
 window.bonkLIB = {};
-bonkLIB.version = "1.1.6";
+bonkLIB.version = "1.2.1";
 
 
 window.bonkAPI = {};
@@ -71,6 +71,11 @@ bonkHUD.settingsHold = [];
 //! not used but will be
 // *Style Store
 bonkHUD.styleHold = {};
+
+// Per-mod style system
+bonkHUD.windowStyleHold = [];    // Per-window style overrides (user-customized)
+bonkHUD.windowStyleDefaults = []; // Per-window style defaults (mod-provided)
+bonkHUD.windowStyleSync = [];    // Per-window sync-to-global toggle (true = use global)
 
 //! styles added do not include color, to be added/changed by user
 //! some innercss using these classes still has not been deleted(will do it)
@@ -1880,15 +1885,13 @@ bonkHUD.createWindow = function (windowName, windowContent, opts = {}) {
         modVersion = opts.modVersion
     }
     if(opts.hasOwnProperty("bonkLIBVersion")) {
-        if(opts.bonkLIBVersion != bonkLIB.version) {
-            if(typeof opts.bonkLIBVersion === 'string') {
-                if(opts.bonkLIBVersion.substring(0, opts.bonkLIBVersion.lastIndexOf(".")) != bonkLIB.version.substring(0, bonkLIB.version.lastIndexOf(".")))
-                    alert(windowName + " may not be compatible with current version of BonkLIB ("+opts.bonkLIBVersion+" =/= "+bonkLIB.version+")");
-                console.log(windowName + " may not be compatible with current version of BonkLIB ("+opts.bonkLIBVersion+" =/= "+bonkLIB.version+")");
+        if(opts.bonkLIBVersion != bonkLIB.version && typeof opts.bonkLIBVersion === 'string') {
+            let modMajor = opts.bonkLIBVersion.split(".")[0];
+            let libMajor = bonkLIB.version.split(".")[0];
+            if(modMajor !== libMajor) {
+                alert(windowName + " may not be compatible with current version of BonkLIB ("+opts.bonkLIBVersion+" =/= "+bonkLIB.version+")");
             }
-            else {
-                alert("Version is incompatible, please check with mod maker to fix");
-            }
+            console.log(windowName + " built for BonkLIB "+opts.bonkLIBVersion+", current: "+bonkLIB.version);
         }
     }
     //! ignoring for now
@@ -1905,7 +1908,18 @@ bonkHUD.createWindow = function (windowName, windowContent, opts = {}) {
     let ind = bonkHUD.settingsHold.length;
     bonkHUD.settingsHold.push(id)
     bonkHUD.windowHold[ind] = { id: id };
-    bonkHUD.windowHold[ind] = bonkHUD.getUISetting(ind)
+
+    // Store mod-provided defaults before getUISetting so they serve as fallback
+    if(opts.hasOwnProperty("defaultUISettings")) {
+        bonkHUD.windowHold[ind].defaults = opts.defaultUISettings;
+    }
+    if(opts.hasOwnProperty("defaultStyleSettings")) {
+        bonkHUD.windowStyleDefaults[ind] = opts.defaultStyleSettings;
+    }
+
+    let savedDefaults = bonkHUD.windowHold[ind].defaults;
+    bonkHUD.windowHold[ind] = bonkHUD.getUISetting(ind);
+    if(savedDefaults) bonkHUD.windowHold[ind].defaults = savedDefaults;
 
     // Create Settings controller
     let fullSettingsDiv = document.createElement("div");
@@ -2048,15 +2062,13 @@ bonkHUD.createWindow = function (windowName, windowContent, opts = {}) {
 
 bonkHUD.createMod = function (modName, opts = {}) {
     if(opts.hasOwnProperty("bonkLIBVersion")) {
-        if(opts.bonkLIBVersion != bonkLIB.version) {
-            if(typeof opts.bonkLIBVersion === 'string') {
-                if(opts.bonkLIBVersion.substring(0, opts.bonkLIBVersion.lastIndexOf(".")) != bonkLIB.version.substring(0, bonkLIB.version.lastIndexOf(".")))
-                    alert(modName + " may not be compatible with current version of BonkLIB ("+opts.bonkLIBVersion+" =/= "+bonkLIB.version+")");
-                console.log(modName + " may not be compatible with current version of BonkLIB ("+opts.bonkLIBVersion+" =/= "+bonkLIB.version+")");
+        if(opts.bonkLIBVersion != bonkLIB.version && typeof opts.bonkLIBVersion === 'string') {
+            let modMajor = opts.bonkLIBVersion.split(".")[0];
+            let libMajor = bonkLIB.version.split(".")[0];
+            if(modMajor !== libMajor) {
+                alert(modName + " may not be compatible with current version of BonkLIB ("+opts.bonkLIBVersion+" =/= "+bonkLIB.version+")");
             }
-            else {
-                alert("Version is incompatible, please check with mod maker to fix");
-            }
+            console.log(modName + " built for BonkLIB "+opts.bonkLIBVersion+", current: "+bonkLIB.version);
         }
     }
 
@@ -2309,6 +2321,7 @@ bonkHUD.resetStyleSettings = function () {
 };
 
 bonkHUD.updateStyleSettings = function () {
+    // Update global color picker values
     for(let prop in bonkHUD.styleHold) {
         try {
             let colorEdit = document.getElementById("bonkhud-" + prop + "-edit");
@@ -2316,23 +2329,102 @@ bonkHUD.updateStyleSettings = function () {
         } catch (er) {
             console.log("Element bonkhud-" + prop + "-edit does not exist");
         }
+    }
 
-        if(prop == "buttonColorHover")
-            continue;
-        else if(prop == "headerColor") {
-            let elements = document.getElementsByClassName(bonkHUD.styleHold[prop].class);
-            for (let j = 0; j < elements.length; j++) {
-                elements[j].style.setProperty(bonkHUD.styleHold[prop].css, bonkHUD.styleHold[prop].color, "important");
+    // Apply styles per window, respecting sync toggle
+    for(let ind = 0; ind < bonkHUD.settingsHold.length; ind++) {
+        let windowId = bonkHUD.windowHold[ind]?.id;
+        if(!windowId) continue;
+        let container = document.getElementById(windowId + "-drag");
+        if(!container) continue;
+
+        let synced = bonkHUD.windowStyleSync[ind] !== false; // default true
+        let styleSource = synced ? null : bonkHUD.getEffectiveWindowStyle(ind);
+
+        for(let prop in bonkHUD.styleHold) {
+            if(prop == "buttonColorHover") continue;
+
+            let color = synced ? bonkHUD.styleHold[prop].color : (styleSource[prop] || bonkHUD.styleHold[prop].color);
+            let cssClass = bonkHUD.styleHold[prop].class;
+            let cssProp = bonkHUD.styleHold[prop].css;
+            let important = (prop == "headerColor") ? "important" : "";
+
+            let elements = container.getElementsByClassName(cssClass);
+            for(let j = 0; j < elements.length; j++) {
+                elements[j].style.setProperty(cssProp, color, important);
             }
-            continue;
+            // Also check if container itself has the class
+            if(container.classList.contains(cssClass)) {
+                container.style.setProperty(cssProp, color, important);
+            }
         }
-        else {
-            let elements = document.getElementsByClassName(bonkHUD.styleHold[prop].class);
-            for (let j = 0; j < elements.length; j++) {
-                elements[j].style.setProperty(bonkHUD.styleHold[prop].css, bonkHUD.styleHold[prop].color);
+
+        // Update per-mod color picker values if they exist
+        if(!synced) {
+            for(let prop in bonkHUD.styleHold) {
+                try {
+                    let picker = document.getElementById("bonkhud-mod-" + ind + "-" + prop + "-edit");
+                    if(picker) picker.value = styleSource[prop] || bonkHUD.styleHold[prop].color;
+                } catch(er) {}
             }
         }
     }
+
+    // Apply global styles to non-window elements (settings panel, etc.)
+    for(let prop in bonkHUD.styleHold) {
+        if(prop == "buttonColorHover") continue;
+        let settingsPanel = document.getElementById("bonkhud-settings");
+        if(!settingsPanel) continue;
+        let elements = settingsPanel.getElementsByClassName(bonkHUD.styleHold[prop].class);
+        for(let j = 0; j < elements.length; j++) {
+            let important = (prop == "headerColor") ? "important" : "";
+            elements[j].style.setProperty(bonkHUD.styleHold[prop].css, bonkHUD.styleHold[prop].color, important);
+        }
+        if(settingsPanel.classList.contains(bonkHUD.styleHold[prop].class)) {
+            settingsPanel.style.setProperty(bonkHUD.styleHold[prop].css, bonkHUD.styleHold[prop].color);
+        }
+    }
+};
+
+// Get effective style for a window (user overrides > mod defaults > global)
+bonkHUD.getEffectiveWindowStyle = function (ind) {
+    let result = {};
+    let modDefaults = bonkHUD.windowStyleDefaults[ind] || {};
+    let userOverrides = bonkHUD.windowStyleHold[ind] || {};
+    for(let prop in bonkHUD.styleHold) {
+        result[prop] = userOverrides[prop] || modDefaults[prop] || bonkHUD.styleHold[prop].color;
+    }
+    return result;
+};
+
+// Save per-window style settings
+bonkHUD.saveWindowStyleSetting = function (ind) {
+    let save_id = 'bonkHUD_WindowStyle_' + bonkHUD.windowHold[ind].id;
+    localStorage.setItem(save_id, JSON.stringify({
+        sync: bonkHUD.windowStyleSync[ind] !== false,
+        colors: bonkHUD.windowStyleHold[ind] || {},
+    }));
+};
+
+// Load per-window style settings
+bonkHUD.loadWindowStyleSetting = function (ind) {
+    let save_id = 'bonkHUD_WindowStyle_' + bonkHUD.windowHold[ind].id;
+    let setting = JSON.parse(localStorage.getItem(save_id));
+    if(setting) {
+        bonkHUD.windowStyleSync[ind] = setting.sync !== false;
+        bonkHUD.windowStyleHold[ind] = setting.colors || {};
+    } else {
+        bonkHUD.windowStyleSync[ind] = true;
+        bonkHUD.windowStyleHold[ind] = {};
+    }
+};
+
+// Reset per-window style settings
+bonkHUD.resetWindowStyleSetting = function (ind) {
+    let save_id = 'bonkHUD_WindowStyle_' + bonkHUD.windowHold[ind].id;
+    localStorage.removeItem(save_id);
+    bonkHUD.windowStyleSync[ind] = true;
+    bonkHUD.windowStyleHold[ind] = {};
 };
 
 bonkHUD.saveUISetting = function (ind) {
@@ -2344,14 +2436,16 @@ bonkHUD.getUISetting = function (ind) {
     let save_id = 'bonkHUD_Setting_' + bonkHUD.windowHold[ind].id;
     let setting = JSON.parse(localStorage.getItem(save_id));
     if (!setting) {
+        // Use mod-provided defaults if available, otherwise hardcoded defaults
+        let defaults = bonkHUD.windowHold[ind].defaults || {};
         setting = {
             id: bonkHUD.windowHold[ind].id,
-            width: "154px",
-            height: "100px",
-            bottom: "0rem",
-            right: "0rem",
-            opacity: "1",
-            display: "block",
+            width: defaults.width || "154px",
+            height: defaults.height || "100px",
+            bottom: defaults.bottom || "0rem",
+            right: defaults.right || "0rem",
+            opacity: defaults.opacity || "1",
+            display: defaults.display || "block",
         }
     }
     return setting;
@@ -2811,6 +2905,9 @@ bonkHUD.createMenuHeader = function (name, settingsContent, recVersion = -1) {
 }
 
 bonkHUD.createWindowControl = function (ind, element) {
+    // Load per-window style settings from localStorage
+    bonkHUD.loadWindowStyleSetting(ind);
+
     let sliderRow = bonkHUD.generateSection();
 
     let holdLeft = document.createElement("div");
@@ -2821,52 +2918,52 @@ bonkHUD.createWindowControl = function (ind, element) {
     let opacityLabel = document.createElement("label");
     opacityLabel.classList.add("bonkhud-settings-label");
     opacityLabel.textContent = "Opacity";
-    holdLeft.appendChild(opacityLabel); // Add the label to the slider container
+    holdLeft.appendChild(opacityLabel);
 
-    // Create the opacity slider input, configuring its range and appearance
+    // Create the opacity slider input
     let opacitySlider = document.createElement("input");
-    opacitySlider.type = "range"; // Slider type for range selection
-    opacitySlider.min = "0.1"; // Minimum opacity value
-    opacitySlider.max = "1"; // Maximum opacity value (fully opaque)
-    opacitySlider.step = "0.05"; // Incremental steps for opacity adjustment
-    opacitySlider.value = bonkHUD.windowHold[ind].opacity; // Default value set to fully opaque
+    opacitySlider.type = "range";
+    opacitySlider.min = "0.1";
+    opacitySlider.max = "1";
+    opacitySlider.step = "0.05";
+    opacitySlider.value = bonkHUD.windowHold[ind].opacity;
     opacitySlider.style.minWidth = "20px";
-    opacitySlider.style.flexGrow = "1"; // Width adjusted for the label
+    opacitySlider.style.flexGrow = "1";
     opacitySlider.oninput = function () {
-        let control = document.getElementById(bonkHUD.windowHold[ind].id + "-drag"); // Update the UI opacity in real-time;
+        let control = document.getElementById(bonkHUD.windowHold[ind].id + "-drag");
         control.style.opacity = this.value;
         bonkHUD.windowHold[ind].opacity = control.style.opacity;
         bonkHUD.saveUISetting(ind);
     };
-    holdLeft.appendChild(opacitySlider); // Place the slider into the slider container
+    holdLeft.appendChild(opacitySlider);
 
     let holdRight = document.createElement("div");
     let visibilityLabel = document.createElement("label");
     visibilityLabel.classList.add("bonkhud-settings-label");
     visibilityLabel.textContent = "Visible";
-    visibilityLabel.style.marginRight = "5px"; // Space between label and slider
-    visibilityLabel.style.display = "inline-block"; // Allows margin-top adjustment
+    visibilityLabel.style.marginRight = "5px";
+    visibilityLabel.style.display = "inline-block";
     visibilityLabel.style.verticalAlign = "middle";
     holdRight.appendChild(visibilityLabel);
 
     let visiblityCheck = document.createElement("input");
     visiblityCheck.id = bonkHUD.windowHold[ind].id + "-visibility-check";
-    visiblityCheck.type = "checkbox"; // Slider type for range selection
+    visiblityCheck.type = "checkbox";
     if (bonkHUD.windowHold[ind].display == "block") {
         visiblityCheck.checked = true;
     }
     else {
         visiblityCheck.checked = false;
     }
-    visiblityCheck.style.display = "inline-block"; // Allows margin-top adjustment
+    visiblityCheck.style.display = "inline-block";
     visiblityCheck.style.verticalAlign = "middle";
     visiblityCheck.oninput = function () {
-        let control = document.getElementById(bonkHUD.windowHold[ind].id + "-drag"); // Update the UI opacity in real-time;
+        let control = document.getElementById(bonkHUD.windowHold[ind].id + "-drag");
         control.style.display = this.checked ? "block" : "none";
         bonkHUD.windowHold[ind].display = control.style.display;
         bonkHUD.saveUISetting(ind);
     };
-    holdRight.appendChild(visiblityCheck); // Place the slider into the slider container
+    holdRight.appendChild(visiblityCheck);
 
     let windowResetButton = bonkHUD.generateButton("Reset");
     windowResetButton.style.paddingLeft = "5px";
@@ -2875,14 +2972,84 @@ bonkHUD.createWindowControl = function (ind, element) {
     windowResetButton.addEventListener('click', (e) => {
         bonkHUD.resetUISetting(ind);
         bonkHUD.loadUISetting(ind);
+        bonkHUD.resetWindowStyleSetting(ind);
+        bonkHUD.updateStyleSettings();
     });
 
     sliderRow.appendChild(holdLeft);
     sliderRow.appendChild(holdRight);
     sliderRow.appendChild(windowResetButton);
-
     element.appendChild(sliderRow);
-    //bonkHUD.settingsHold[ind].settings.appendChild(sliderRow);
+
+    // --- Per-Mod Style Controls ---
+    let styleRow = bonkHUD.generateSection();
+
+    // Sync to Global toggle
+    let syncDiv = document.createElement("div");
+    syncDiv.style.marginBottom = "5px";
+
+    let syncLabel = document.createElement("label");
+    syncLabel.classList.add("bonkhud-settings-label");
+    syncLabel.textContent = "Sync to Global Style";
+    syncLabel.style.marginRight = "5px";
+    syncLabel.style.display = "inline-block";
+    syncLabel.style.verticalAlign = "middle";
+
+    let syncCheck = document.createElement("input");
+    syncCheck.type = "checkbox";
+    syncCheck.checked = bonkHUD.windowStyleSync[ind] !== false;
+    syncCheck.style.display = "inline-block";
+    syncCheck.style.verticalAlign = "middle";
+
+    syncDiv.appendChild(syncLabel);
+    syncDiv.appendChild(syncCheck);
+    styleRow.appendChild(syncDiv);
+
+    // Per-mod color pickers container (hidden when synced)
+    let colorPickersDiv = document.createElement("div");
+    colorPickersDiv.id = "bonkhud-mod-" + ind + "-colors";
+    colorPickersDiv.style.display = syncCheck.checked ? "none" : "block";
+
+    let effectiveStyle = bonkHUD.getEffectiveWindowStyle(ind);
+
+    for(let prop in bonkHUD.styleHold) {
+        let colorDiv = document.createElement("div");
+        colorDiv.style.marginTop = "3px";
+
+        let colorLabel = document.createElement("label");
+        colorLabel.classList.add("bonkhud-settings-label");
+        colorLabel.style.marginRight = "10px";
+        colorLabel.style.fontSize = "0.8rem";
+        colorLabel.innerText = bonkHUD.styleHold[prop].class.replace("bonkhud-", "");
+
+        let colorEdit = document.createElement("input");
+        colorEdit.setAttribute('type', 'color');
+        colorEdit.id = "bonkhud-mod-" + ind + "-" + prop + "-edit";
+        colorEdit.value = effectiveStyle[prop] || bonkHUD.styleHold[prop].color;
+        colorEdit.style.display = "inline-block";
+
+        colorDiv.appendChild(colorLabel);
+        colorDiv.appendChild(colorEdit);
+        colorPickersDiv.appendChild(colorDiv);
+
+        colorEdit.addEventListener('change', (e) => {
+            if(!bonkHUD.windowStyleHold[ind]) bonkHUD.windowStyleHold[ind] = {};
+            bonkHUD.windowStyleHold[ind][prop] = e.target.value;
+            bonkHUD.saveWindowStyleSetting(ind);
+            bonkHUD.updateStyleSettings();
+        });
+    }
+
+    styleRow.appendChild(colorPickersDiv);
+    element.appendChild(styleRow);
+
+    // Toggle sync behavior
+    syncCheck.oninput = function () {
+        bonkHUD.windowStyleSync[ind] = this.checked;
+        colorPickersDiv.style.display = this.checked ? "none" : "block";
+        bonkHUD.saveWindowStyleSetting(ind);
+        bonkHUD.updateStyleSettings();
+    };
 };
 
 bonkHUD.focusWindow = function (focusItem) {

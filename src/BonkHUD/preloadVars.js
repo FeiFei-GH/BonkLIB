@@ -8,6 +8,11 @@ bonkHUD.settingsHold = [];
 // *Style Store
 bonkHUD.styleHold = {};
 
+// Per-mod style system
+bonkHUD.windowStyleHold = [];    // Per-window style overrides (user-customized)
+bonkHUD.windowStyleDefaults = []; // Per-window style defaults (mod-provided)
+bonkHUD.windowStyleSync = [];    // Per-window sync-to-global toggle (true = use global)
+
 //! styles added do not include color, to be added/changed by user
 //! some innercss using these classes still has not been deleted(will do it)
 bonkHUD.bonkHUDCSS = document.createElement("style");

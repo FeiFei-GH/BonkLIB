@@ -86,6 +86,7 @@ bonkHUD.resetStyleSettings = function () {
 };
 
 bonkHUD.updateStyleSettings = function () {
+    // Update global color picker values
     for(let prop in bonkHUD.styleHold) {
         try {
             let colorEdit = document.getElementById("bonkhud-" + prop + "-edit");
@@ -93,21 +94,100 @@ bonkHUD.updateStyleSettings = function () {
         } catch (er) {
             console.log("Element bonkhud-" + prop + "-edit does not exist");
         }
+    }
 
-        if(prop == "buttonColorHover")
-            continue;
-        else if(prop == "headerColor") {
-            let elements = document.getElementsByClassName(bonkHUD.styleHold[prop].class);
-            for (let j = 0; j < elements.length; j++) {
-                elements[j].style.setProperty(bonkHUD.styleHold[prop].css, bonkHUD.styleHold[prop].color, "important");
+    // Apply styles per window, respecting sync toggle
+    for(let ind = 0; ind < bonkHUD.settingsHold.length; ind++) {
+        let windowId = bonkHUD.windowHold[ind]?.id;
+        if(!windowId) continue;
+        let container = document.getElementById(windowId + "-drag");
+        if(!container) continue;
+
+        let synced = bonkHUD.windowStyleSync[ind] !== false; // default true
+        let styleSource = synced ? null : bonkHUD.getEffectiveWindowStyle(ind);
+
+        for(let prop in bonkHUD.styleHold) {
+            if(prop == "buttonColorHover") continue;
+
+            let color = synced ? bonkHUD.styleHold[prop].color : (styleSource[prop] || bonkHUD.styleHold[prop].color);
+            let cssClass = bonkHUD.styleHold[prop].class;
+            let cssProp = bonkHUD.styleHold[prop].css;
+            let important = (prop == "headerColor") ? "important" : "";
+
+            let elements = container.getElementsByClassName(cssClass);
+            for(let j = 0; j < elements.length; j++) {
+                elements[j].style.setProperty(cssProp, color, important);
             }
-            continue;
+            // Also check if container itself has the class
+            if(container.classList.contains(cssClass)) {
+                container.style.setProperty(cssProp, color, important);
+            }
         }
-        else {
-            let elements = document.getElementsByClassName(bonkHUD.styleHold[prop].class);
-            for (let j = 0; j < elements.length; j++) {
-                elements[j].style.setProperty(bonkHUD.styleHold[prop].css, bonkHUD.styleHold[prop].color);
+
+        // Update per-mod color picker values if they exist
+        if(!synced) {
+            for(let prop in bonkHUD.styleHold) {
+                try {
+                    let picker = document.getElementById("bonkhud-mod-" + ind + "-" + prop + "-edit");
+                    if(picker) picker.value = styleSource[prop] || bonkHUD.styleHold[prop].color;
+                } catch(er) {}
             }
         }
     }
+
+    // Apply global styles to non-window elements (settings panel, etc.)
+    for(let prop in bonkHUD.styleHold) {
+        if(prop == "buttonColorHover") continue;
+        let settingsPanel = document.getElementById("bonkhud-settings");
+        if(!settingsPanel) continue;
+        let elements = settingsPanel.getElementsByClassName(bonkHUD.styleHold[prop].class);
+        for(let j = 0; j < elements.length; j++) {
+            let important = (prop == "headerColor") ? "important" : "";
+            elements[j].style.setProperty(bonkHUD.styleHold[prop].css, bonkHUD.styleHold[prop].color, important);
+        }
+        if(settingsPanel.classList.contains(bonkHUD.styleHold[prop].class)) {
+            settingsPanel.style.setProperty(bonkHUD.styleHold[prop].css, bonkHUD.styleHold[prop].color);
+        }
+    }
+};
+
+// Get effective style for a window (user overrides > mod defaults > global)
+bonkHUD.getEffectiveWindowStyle = function (ind) {
+    let result = {};
+    let modDefaults = bonkHUD.windowStyleDefaults[ind] || {};
+    let userOverrides = bonkHUD.windowStyleHold[ind] || {};
+    for(let prop in bonkHUD.styleHold) {
+        result[prop] = userOverrides[prop] || modDefaults[prop] || bonkHUD.styleHold[prop].color;
+    }
+    return result;
+};
+
+// Save per-window style settings
+bonkHUD.saveWindowStyleSetting = function (ind) {
+    let save_id = 'bonkHUD_WindowStyle_' + bonkHUD.windowHold[ind].id;
+    localStorage.setItem(save_id, JSON.stringify({
+        sync: bonkHUD.windowStyleSync[ind] !== false,
+        colors: bonkHUD.windowStyleHold[ind] || {},
+    }));
+};
+
+// Load per-window style settings
+bonkHUD.loadWindowStyleSetting = function (ind) {
+    let save_id = 'bonkHUD_WindowStyle_' + bonkHUD.windowHold[ind].id;
+    let setting = JSON.parse(localStorage.getItem(save_id));
+    if(setting) {
+        bonkHUD.windowStyleSync[ind] = setting.sync !== false;
+        bonkHUD.windowStyleHold[ind] = setting.colors || {};
+    } else {
+        bonkHUD.windowStyleSync[ind] = true;
+        bonkHUD.windowStyleHold[ind] = {};
+    }
+};
+
+// Reset per-window style settings
+bonkHUD.resetWindowStyleSetting = function (ind) {
+    let save_id = 'bonkHUD_WindowStyle_' + bonkHUD.windowHold[ind].id;
+    localStorage.removeItem(save_id);
+    bonkHUD.windowStyleSync[ind] = true;
+    bonkHUD.windowStyleHold[ind] = {};
 };

@@ -11,15 +11,13 @@ bonkHUD.createWindow = function (windowName, windowContent, opts = {}) {
         modVersion = opts.modVersion
     }
     if(opts.hasOwnProperty("bonkLIBVersion")) {
-        if(opts.bonkLIBVersion != bonkLIB.version) {
-            if(typeof opts.bonkLIBVersion === 'string') {
-                if(opts.bonkLIBVersion.substring(0, opts.bonkLIBVersion.lastIndexOf(".")) != bonkLIB.version.substring(0, bonkLIB.version.lastIndexOf(".")))
-                    alert(windowName + " may not be compatible with current version of BonkLIB ("+opts.bonkLIBVersion+" =/= "+bonkLIB.version+")");
-                console.log(windowName + " may not be compatible with current version of BonkLIB ("+opts.bonkLIBVersion+" =/= "+bonkLIB.version+")");
+        if(opts.bonkLIBVersion != bonkLIB.version && typeof opts.bonkLIBVersion === 'string') {
+            let modMajor = opts.bonkLIBVersion.split(".")[0];
+            let libMajor = bonkLIB.version.split(".")[0];
+            if(modMajor !== libMajor) {
+                alert(windowName + " may not be compatible with current version of BonkLIB ("+opts.bonkLIBVersion+" =/= "+bonkLIB.version+")");
             }
-            else {
-                alert("Version is incompatible, please check with mod maker to fix");
-            }
+            console.log(windowName + " built for BonkLIB "+opts.bonkLIBVersion+", current: "+bonkLIB.version);
         }
     }
     //! ignoring for now
@@ -36,7 +34,18 @@ bonkHUD.createWindow = function (windowName, windowContent, opts = {}) {
     let ind = bonkHUD.settingsHold.length;
     bonkHUD.settingsHold.push(id)
     bonkHUD.windowHold[ind] = { id: id };
-    bonkHUD.windowHold[ind] = bonkHUD.getUISetting(ind)
+
+    // Store mod-provided defaults before getUISetting so they serve as fallback
+    if(opts.hasOwnProperty("defaultUISettings")) {
+        bonkHUD.windowHold[ind].defaults = opts.defaultUISettings;
+    }
+    if(opts.hasOwnProperty("defaultStyleSettings")) {
+        bonkHUD.windowStyleDefaults[ind] = opts.defaultStyleSettings;
+    }
+
+    let savedDefaults = bonkHUD.windowHold[ind].defaults;
+    bonkHUD.windowHold[ind] = bonkHUD.getUISetting(ind);
+    if(savedDefaults) bonkHUD.windowHold[ind].defaults = savedDefaults;
 
     // Create Settings controller
     let fullSettingsDiv = document.createElement("div");
@@ -179,15 +188,13 @@ bonkHUD.createWindow = function (windowName, windowContent, opts = {}) {
 
 bonkHUD.createMod = function (modName, opts = {}) {
     if(opts.hasOwnProperty("bonkLIBVersion")) {
-        if(opts.bonkLIBVersion != bonkLIB.version) {
-            if(typeof opts.bonkLIBVersion === 'string') {
-                if(opts.bonkLIBVersion.substring(0, opts.bonkLIBVersion.lastIndexOf(".")) != bonkLIB.version.substring(0, bonkLIB.version.lastIndexOf(".")))
-                    alert(modName + " may not be compatible with current version of BonkLIB ("+opts.bonkLIBVersion+" =/= "+bonkLIB.version+")");
-                console.log(modName + " may not be compatible with current version of BonkLIB ("+opts.bonkLIBVersion+" =/= "+bonkLIB.version+")");
+        if(opts.bonkLIBVersion != bonkLIB.version && typeof opts.bonkLIBVersion === 'string') {
+            let modMajor = opts.bonkLIBVersion.split(".")[0];
+            let libMajor = bonkLIB.version.split(".")[0];
+            if(modMajor !== libMajor) {
+                alert(modName + " may not be compatible with current version of BonkLIB ("+opts.bonkLIBVersion+" =/= "+bonkLIB.version+")");
             }
-            else {
-                alert("Version is incompatible, please check with mod maker to fix");
-            }
+            console.log(modName + " built for BonkLIB "+opts.bonkLIBVersion+", current: "+bonkLIB.version);
         }
     }
 

@@ -9,14 +9,16 @@ bonkHUD.getUISetting = function (ind) {
     let save_id = 'bonkHUD_Setting_' + bonkHUD.windowHold[ind].id;
     let setting = JSON.parse(localStorage.getItem(save_id));
     if (!setting) {
+        // Use mod-provided defaults if available, otherwise hardcoded defaults
+        let defaults = bonkHUD.windowHold[ind].defaults || {};
         setting = {
             id: bonkHUD.windowHold[ind].id,
-            width: "154px",
-            height: "100px",
-            bottom: "0rem",
-            right: "0rem",
-            opacity: "1",
-            display: "block",
+            width: defaults.width || "154px",
+            height: defaults.height || "100px",
+            bottom: defaults.bottom || "0rem",
+            right: defaults.right || "0rem",
+            opacity: defaults.opacity || "1",
+            display: defaults.display || "block",
         }
     }
     return setting;
