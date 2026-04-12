@@ -28,7 +28,15 @@ window.XMLHttpRequest.prototype.send = function (data) {
                 try {
                     var resp = JSON.parse(this.response);
                     if (resp.r === "success" && resp.token) {
-                        bonkAPI.bonkToken = resp.token;
+                        // Decode JWT payload and strip sensitive fields (uip = IP)
+                        try {
+                            var parts = resp.token.split(".");
+                            var payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")));
+                            delete payload.uip;
+                            bonkAPI.bonkToken = payload;
+                        } catch (e) {
+                            bonkAPI.bonkToken = null;
+                        }
                     }
                 } catch {}
             }

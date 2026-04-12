@@ -32,7 +32,7 @@ bonkAPI.hostID = -1; // Host's ID
 
 bonkAPI.isLoggingIn = false;
 bonkAPI._isBonkLogin = false;
-bonkAPI.bonkToken = null; // Bonk.io JWT token (captured from login_auto/login_legacy)
+bonkAPI.bonkToken = null; // Decoded bonk.io JWT payload (uid, un, lv, ev, exp, g — uip stripped for privacy)
 
 // MGF vars
 bonkAPI.bonkWSS = 0;

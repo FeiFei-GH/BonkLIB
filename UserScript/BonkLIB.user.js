@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         BonkLIB
-// @version      1.2.2
+// @version      1.2.3
 // @author       FeiFei + Clarifi + BoZhi
 // @namespace    https://github.com/FeiFei-GH/BonkLIB
 // @description  BonkAPI + BonkHUD
@@ -16,7 +16,7 @@ https://greasyfork.org/en/scripts/433861-code-injector-bonk-io
 
 // ! Compitable with Bonk Version 49
 window.bonkLIB = {};
-bonkLIB.version = "1.2.2";
+bonkLIB.version = "1.2.3";
 
 
 window.bonkAPI = {};
@@ -52,7 +52,7 @@ bonkAPI.hostID = -1; // Host's ID
 
 bonkAPI.isLoggingIn = false;
 bonkAPI._isBonkLogin = false;
-bonkAPI.bonkToken = null; // Bonk.io JWT token (captured from login_auto/login_legacy)
+bonkAPI.bonkToken = null; // Decoded bonk.io JWT payload (uid, un, lv, ev, exp, g — uip stripped for privacy)
 
 // MGF vars
 bonkAPI.bonkWSS = 0;
@@ -1767,7 +1767,15 @@ window.XMLHttpRequest.prototype.send = function (data) {
                 try {
                     var resp = JSON.parse(this.response);
                     if (resp.r === "success" && resp.token) {
-                        bonkAPI.bonkToken = resp.token;
+                        // Decode JWT payload and strip sensitive fields (uip = IP)
+                        try {
+                            var parts = resp.token.split(".");
+                            var payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")));
+                            delete payload.uip;
+                            bonkAPI.bonkToken = payload;
+                        } catch (e) {
+                            bonkAPI.bonkToken = null;
+                        }
                     }
                 } catch {}
             }
